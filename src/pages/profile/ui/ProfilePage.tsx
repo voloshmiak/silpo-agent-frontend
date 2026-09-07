@@ -1,5 +1,5 @@
 import React from "react";
-import { Header } from "@/widgets/header";
+// import { Header } from "@/widgets/header";
 import { useUserProfile } from "@/entities/user";
 import {
   PhysicalDataCard,
@@ -32,7 +32,7 @@ export const ProfilePage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#F4F1E8] text-zinc-900 flex flex-col font-sans">
-      <Header activeTab="Профіль" />
+      {/* <Header activeTab="Профіль" /> */}
 
       <main className="max-w-6xl w-full mx-auto p-8 space-y-6">
         <div className="flex items-start justify-between">
