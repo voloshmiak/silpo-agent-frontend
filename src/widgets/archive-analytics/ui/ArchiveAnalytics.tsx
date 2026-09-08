@@ -13,7 +13,7 @@ export const ArchiveAnalytics: React.FC = () => {
 
   const actualPoints = mockWeightHistory.filter((p) => !p.isForecast);
   const forecastPoints = mockWeightHistory.filter(
-    (p, i) => i >= actualPoints.length - 1
+    (_, i) => i >= actualPoints.length - 1
   );
 
   const actualSvgPath = actualPoints

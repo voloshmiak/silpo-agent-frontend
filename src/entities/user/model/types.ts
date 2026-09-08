@@ -1,3 +1,11 @@
+export interface BackendUser {
+  id: string;
+  name: string;
+  weight: number;
+  height: number;
+  created_at: string;
+}
+
 export type DayOfWeek = "ПН" | "ВТ" | "СР" | "ЧТ" | "ПТ" | "СБ" | "НД";
 export type WorkoutType = "СИЛОВІ" | "КАРДІО" | "—";
 

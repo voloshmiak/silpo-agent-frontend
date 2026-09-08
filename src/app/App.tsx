@@ -1,42 +1,42 @@
-import { useEffect, useState } from "react";
-import { userApi } from "@/entities/user/api/userApi";
+import { useState } from "react";
 import { Header } from "@/widgets/header";
 import { ProfilePage } from "@/pages/profile";
 import { WeekPlanPage } from "@/pages/week-plan";
 import { ArchivePage } from "@/pages/archive";
 import { FeedbackPage } from "@/pages/feedback";
+import { OnboardingPage } from "@/pages/onboarding";
+import { useAuthUser } from "@/entities/user";
+import type { ParsedPlanContent } from "@/entities/plan";
 
 export function App() {
   const [currentTab, setCurrentTab] = useState("Тиждень");
-  const [isReady, setIsReady] = useState(false);
+  const [generatedPlan, setGeneratedPlan] = useState<ParsedPlanContent | null>(null);
+  const [onboardingDone, setOnboardingDone] = useState(false);
+  const { isAuthenticated, isLoading } = useAuthUser();
 
-  useEffect(() => {
-    // Получаем или создаем юзера при старте
-    userApi.initUser("Денис")
-      .then((user) => {
-        console.log("Авторизовано юзера:", user.id);
-        setIsReady(true);
-      })
-      .catch((err) => {
-        console.error("Помилка авторизації:", err);
-        setIsReady(true);
-      });
-  }, []);
+  if (isLoading) {
+    return <div className="min-h-screen bg-[#F4F1E8]" />;
+  }
 
-  if (!isReady) {
+  if (!isAuthenticated && !onboardingDone) {
     return (
-      <div className="min-h-screen bg-[#F4F1E8] flex items-center justify-center font-mono text-sm">
-        Ініціалізація SILPOFIT...
-      </div>
+      <OnboardingPage
+        onComplete={(plan) => {
+          setGeneratedPlan(plan);
+          setOnboardingDone(true);
+          setCurrentTab("Тиждень");
+        }}
+      />
     );
   }
+
   return (
     <div className="min-h-screen bg-[#F4F1E8] text-zinc-900 flex flex-col font-sans">
       <Header activeTab={currentTab} onTabChange={setCurrentTab} />
 
       <main className="flex-1">
         {currentTab === "Профіль" && <ProfilePage />}
-        {currentTab === "Тиждень" && <WeekPlanPage />}
+        {currentTab === "Тиждень" && <WeekPlanPage initialPlan={generatedPlan} />}
         {currentTab === "Архів" && <ArchivePage />}
         {currentTab === "Фідбек" && <FeedbackPage />}
       </main>

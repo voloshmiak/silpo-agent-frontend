@@ -1,15 +1,31 @@
-import React from "react";
-// import { Header } from "@/widgets/header";
-import { useUserProfile } from "@/entities/user";
+import React, { useState } from "react";
+import { useUserProfile, useAuthUser } from "@/entities/user";
 import {
   PhysicalDataCard,
   SportScheduleCard,
   DietaryCard,
   BudgetCard,
 } from "@/widgets/profile-cards";
+import { Button, Card, FieldLabel, TextInput } from "@/shared/ui";
 
 export const ProfilePage: React.FC = () => {
   const { profile, updateProfile, saveChanges, resetChanges, isSaving } = useUserProfile();
+  const { user, isLoading, updateProfile: updateBackendProfile } = useAuthUser();
+
+  const [name, setName] = useState("");
+  const [height, setHeight] = useState<number | "">("");
+  const [weight, setWeight] = useState<number | "">("");
+  const [isSavingBackend, setIsSavingBackend] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  // Синхронізуємо чернетку форми з даними, щойно вони прийшли з бекенду.
+  const [loadedUserId, setLoadedUserId] = useState<string | null>(null);
+  if (user && user.id !== loadedUserId) {
+    setLoadedUserId(user.id);
+    setName(user.name);
+    setHeight(user.height);
+    setWeight(user.weight);
+  }
 
   const handleBudgetChange = (weeklyLimit: number) => {
     updateProfile({
@@ -30,11 +46,21 @@ export const ProfilePage: React.FC = () => {
     });
   };
 
-  return (
-    <div className="min-h-screen bg-[#F4F1E8] text-zinc-900 flex flex-col font-sans">
-      {/* <Header activeTab="Профіль" /> */}
+  const handleSaveBackendProfile = async () => {
+    if (!name.trim() || height === "" || weight === "") return;
+    setIsSavingBackend(true);
+    setSaveError(null);
+    try {
+      await updateBackendProfile({ name: name.trim(), height: Number(height), weight: Number(weight) });
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : "Не вдалося зберегти");
+    } finally {
+      setIsSavingBackend(false);
+    }
+  };
 
-      <main className="max-w-6xl w-full mx-auto p-8 space-y-6">
+  return (
+    <div className="max-w-6xl w-full mx-auto p-8 space-y-6">
         <div className="flex items-start justify-between">
           <div>
             <h1 className="text-3xl font-black tracking-tight uppercase font-mono">
@@ -62,6 +88,54 @@ export const ProfilePage: React.FC = () => {
           </div>
         </div>
 
+        <Card className="p-6">
+          <h2 className="text-xs font-mono font-bold tracking-widest uppercase mb-4">
+            Ім'я, зріст, вага
+          </h2>
+          <p className="text-xs text-zinc-500 mb-4">
+            Ці дані зберігаються на бекенді та використовуються для розрахунку калорій.
+          </p>
+
+          {isLoading ? (
+            <p className="text-xs text-zinc-500">Завантаження…</p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <FieldLabel>Ім'я</FieldLabel>
+                <TextInput value={name} onChange={(e) => setName(e.target.value)} />
+              </div>
+              <div>
+                <FieldLabel hint="см">Зріст</FieldLabel>
+                <TextInput
+                  type="number"
+                  value={height}
+                  onChange={(e) => setHeight(e.target.value === "" ? "" : Number(e.target.value))}
+                />
+              </div>
+              <div>
+                <FieldLabel hint="кг">Вага</FieldLabel>
+                <TextInput
+                  type="number"
+                  value={weight}
+                  onChange={(e) => setWeight(e.target.value === "" ? "" : Number(e.target.value))}
+                />
+              </div>
+            </div>
+          )}
+
+          {saveError && <p className="text-xs text-[#FF5C00] font-semibold mt-3">{saveError}</p>}
+
+          <Button
+            variant="lime"
+            size="sm"
+            className="mt-4"
+            disabled={isSavingBackend || isLoading}
+            onClick={handleSaveBackendProfile}
+          >
+            {isSavingBackend ? "Збереження..." : "Зберегти на бекенді"}
+          </Button>
+        </Card>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <PhysicalDataCard data={profile.physical} />
           <SportScheduleCard
@@ -77,7 +151,6 @@ export const ProfilePage: React.FC = () => {
             onChangeLimit={handleBudgetChange}
           />
         </div>
-      </main>
     </div>
   );
 };

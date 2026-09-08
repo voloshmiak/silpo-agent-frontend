@@ -46,7 +46,7 @@ export const CartSummary: React.FC<Props> = ({ cart, onOrderSuccess }) => {
       <div className="space-y-4 pt-4 border-t border-[#D8D2C2]">
         <div className="flex justify-between items-end">
           <span className="text-xs uppercase font-mono text-zinc-500 font-bold">Разом</span>
-          <span className="text-3xl font-serif font-black text-zinc-900">
+          <span className="text-3xl font-mono font-black text-zinc-900">
             {formatCurrency(cart.totalPrice)}
           </span>
         </div>

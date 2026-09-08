@@ -5,15 +5,26 @@ import type { DailyMacroSummary } from "@/entities/meal";
 interface Props {
   macros: DailyMacroSummary;
   onRefreshClick?: () => void;
-  onPhotoClick?: () => void;
+  onRegenerate?: (reason: string) => void;
+  isRegenerating?: boolean;
 }
 
 export const WeeklyMacros: React.FC<Props> = ({
   macros,
   onRefreshClick,
-  onPhotoClick,
+  onRegenerate,
+  isRegenerating,
 }) => {
   const [activeDay, setActiveDay] = useState("ПН");
+  const [isReasonOpen, setIsReasonOpen] = useState(false);
+  const [reason, setReason] = useState("");
+
+  const submitRegenerate = () => {
+    if (!reason.trim()) return;
+    onRegenerate?.(reason.trim());
+    setIsReasonOpen(false);
+    setReason("");
+  };
 
   const days = [
     { day: "ПН", cal: 1980, note: "СИЛОВІ" },
@@ -73,11 +84,37 @@ export const WeeklyMacros: React.FC<Props> = ({
           <Button variant="outline" size="sm" onClick={onRefreshClick}>
             ↻ Оновити залишки
           </Button>
-          <Button variant="outline" size="sm" onClick={onPhotoClick}>
-            ⧉ Фото холодильника
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsReasonOpen((open) => !open)}
+            disabled={isRegenerating}
+          >
+            {isRegenerating ? "Генерація…" : "⟳ Перегенерувати"}
           </Button>
         </div>
       </div>
+
+      {isReasonOpen && (
+        <div className="bg-[#ECE8DC] border border-[#D8D2C2] rounded-xl p-4 flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+          <input
+            autoFocus
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && submitRegenerate()}
+            placeholder="Причина: наприклад, забагато курки цього тижня"
+            className="flex-1 w-full h-10 px-3 rounded-lg border border-[#D8D2C2] bg-[#E5E0D3]/40 text-sm outline-none focus:border-zinc-500"
+          />
+          <div className="flex gap-2 shrink-0">
+            <Button variant="ghost" size="sm" onClick={() => setIsReasonOpen(false)}>
+              Скасувати
+            </Button>
+            <Button variant="lime" size="sm" onClick={submitRegenerate} disabled={!reason.trim()}>
+              Перегенерувати
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Селектор дней недели */}
       <div className="grid grid-cols-7 gap-2">
