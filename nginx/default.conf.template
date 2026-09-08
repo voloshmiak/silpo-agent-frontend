@@ -1,0 +1,39 @@
+server {
+    # Cloud Run injects PORT and requires the container to listen on it;
+    # envsubst fills it in from the environment at container start.
+    listen ${PORT};
+    server_name _;
+
+    root /usr/share/nginx/html;
+    index index.html;
+
+    gzip on;
+    gzip_comp_level 5;
+    gzip_min_length 256;
+    gzip_proxied any;
+    gzip_vary on;
+    gzip_types
+        application/javascript
+        application/json
+        image/svg+xml
+        text/css
+        text/plain;
+
+    # Vite emits content-hashed filenames under /assets, so those are safe to
+    # cache forever. index.html must never be cached, or a client keeps
+    # loading the bundle from a previous deploy.
+    location /assets/ {
+        try_files $uri =404;
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+
+    location = /index.html {
+        add_header Cache-Control "no-cache";
+    }
+
+    # Client-side routing: unknown paths are app routes, not 404s.
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+}
