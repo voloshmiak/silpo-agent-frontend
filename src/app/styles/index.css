@@ -19,3 +19,56 @@ body {
   color: var(--foreground);
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
+/* --- Анімації екрана генерації плану --- */
+
+@keyframes plan-dot-pulse {
+  0%, 100% { opacity: 0.25; transform: translateY(0); }
+  50%      { opacity: 1;    transform: translateY(-2px); }
+}
+
+@keyframes plan-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+@keyframes plan-fade-in {
+  from { opacity: 0; transform: translateY(3px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.plan-dot {
+  display: inline-block;
+  animation: plan-dot-pulse 1.1s ease-in-out infinite;
+}
+.plan-dot-2 { animation-delay: 0.16s; }
+.plan-dot-3 { animation-delay: 0.32s; }
+
+.plan-step-text {
+  background: linear-gradient(
+    90deg,
+    var(--muted-foreground) 0%,
+    var(--muted-foreground) 35%,
+    var(--foreground) 50%,
+    var(--muted-foreground) 65%,
+    var(--muted-foreground) 100%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: plan-fade-in 0.35s ease-out, plan-shimmer 2.4s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .plan-dot,
+  .plan-step-text {
+    animation: none;
+  }
+  .plan-dot { opacity: 1; }
+  .plan-step-text {
+    background: none;
+    -webkit-background-clip: border-box;
+    background-clip: border-box;
+    color: var(--foreground);
+  }
+}

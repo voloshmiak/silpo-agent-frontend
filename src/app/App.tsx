@@ -6,11 +6,11 @@ import { ArchivePage } from "@/pages/archive";
 import { FeedbackPage } from "@/pages/feedback";
 import { OnboardingPage } from "@/pages/onboarding";
 import { useAuthUser } from "@/entities/user";
-import type { ParsedPlanContent } from "@/entities/plan";
+import type { PlanData } from "@/entities/plan";
 
 export function App() {
   const [currentTab, setCurrentTab] = useState("Тиждень");
-  const [generatedPlan, setGeneratedPlan] = useState<ParsedPlanContent | null>(null);
+  const [generatedPlan, setGeneratedPlan] = useState<PlanData | null>(null);
   const [onboardingDone, setOnboardingDone] = useState(false);
   const { isAuthenticated, isLoading } = useAuthUser();
 

@@ -1,7 +1,9 @@
-import type { PlanCartItem, PlanTargets } from "@/shared/api";
-
-export interface ParsedPlanContent {
-  answer: string;
-  cartItems: PlanCartItem[];
-  targets: PlanTargets;
-}
+export type {
+  PlanCartItem,
+  PlanData,
+  PlanDay,
+  PlanMeal,
+  PlanMealSlot,
+  PlanSummary,
+  PlanTargets,
+} from "@/shared/api";

@@ -1,34 +1,38 @@
 import { useCallback, useState } from "react";
-import { streamPlan, type PlanStreamParams, type PlanToolCallEvent } from "@/shared/api";
-import type { ParsedPlanContent } from "@/entities/plan";
+import { streamPlan, type PlanData, type PlanStreamParams } from "@/shared/api";
+import {
+  FINALIZE_TOOL,
+  FINISHING_STEP_LABEL,
+  INITIAL_STEP_LABEL,
+  formatToolLabel,
+} from "./toolLabels";
 
 export type PlanGenerationStatus = "idle" | "streaming" | "done" | "error";
 
 export const usePlanGeneration = () => {
   const [status, setStatus] = useState<PlanGenerationStatus>("idle");
-  const [toolEvents, setToolEvents] = useState<PlanToolCallEvent[]>([]);
-  const [result, setResult] = useState<ParsedPlanContent | null>(null);
+  const [currentStep, setCurrentStep] = useState<string>(INITIAL_STEP_LABEL);
+  const [result, setResult] = useState<PlanData | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const generate = useCallback(async (params: PlanStreamParams) => {
     setStatus("streaming");
-    setToolEvents([]);
+    setCurrentStep(INITIAL_STEP_LABEL);
     setError(null);
 
     try {
-      const streamed = await streamPlan(params, {
-        onToolCall: (event) => setToolEvents((prev) => [...prev, event]),
+      const plan = await streamPlan(params, {
+        onToolCall: (event) => setCurrentStep(formatToolLabel(event.tool)),
+        onToolResult: (event) => {
+          // finalize_plan — останній виклик у прогоні: далі модель дописує
+          // план без жодних подій, тож рядок не має завмирати на інструменті
+          if (event.tool === FINALIZE_TOOL) setCurrentStep(FINISHING_STEP_LABEL);
+        },
       });
 
-      const parsed: ParsedPlanContent = {
-        answer: streamed.answer,
-        cartItems: streamed.cart_items,
-        targets: streamed.targets,
-      };
-
-      setResult(parsed);
+      setResult(plan);
       setStatus("done");
-      return parsed;
+      return plan;
     } catch (err) {
       setStatus("error");
       setError(err instanceof Error ? err.message : "Не вдалося згенерувати план");
@@ -38,10 +42,10 @@ export const usePlanGeneration = () => {
 
   const reset = useCallback(() => {
     setStatus("idle");
-    setToolEvents([]);
+    setCurrentStep(INITIAL_STEP_LABEL);
     setResult(null);
     setError(null);
   }, []);
 
-  return { status, toolEvents, result, error, generate, reset };
+  return { status, currentStep, result, error, generate, reset };
 };

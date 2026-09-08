@@ -34,12 +34,6 @@ export const CartSummary: React.FC<Props> = ({ cart, onOrderSuccess }) => {
             <CartProductRow key={item.id} product={item} />
           ))}
         </div>
-
-        <div className="pt-2">
-          <span className="text-xs font-mono text-zinc-500 cursor-pointer hover:text-zinc-800">
-            + ще 9 позицій
-          </span>
-        </div>
       </div>
 
       {/* Итоговый расчет и кнопка действия */}
@@ -51,12 +45,14 @@ export const CartSummary: React.FC<Props> = ({ cart, onOrderSuccess }) => {
           </span>
         </div>
 
-        <div className="bg-[#DFDACB]/60 p-2.5 rounded-lg flex items-center justify-between text-xs">
-          <Badge variant="orange">Акції</Badge>
-          <span className="font-mono text-zinc-700">
-            Заощаджено {cart.discountSaved.toFixed(2).replace(".", ",")} ₴
-          </span>
-        </div>
+        {cart.discountSaved > 0 && (
+          <div className="bg-[#DFDACB]/60 p-2.5 rounded-lg flex items-center justify-between text-xs">
+            <Badge variant="orange">Акції</Badge>
+            <span className="font-mono text-zinc-700">
+              Заощаджено {cart.discountSaved.toFixed(2).replace(".", ",")} ₴
+            </span>
+          </div>
+        )}
 
         {/* Прогресс бюджета */}
         <div>

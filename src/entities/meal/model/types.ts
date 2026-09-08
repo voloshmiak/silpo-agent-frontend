@@ -5,7 +5,9 @@ export interface MealItem {
   time: string;
   type: MealType;
   title: string;
-  cookingTimeMinutes: number;
+  /** Склад страви з плану агента: ["вівсянка 80г", "молоко 200мл"] */
+  items?: string[];
+  cookingTimeMinutes?: number;
   calories: number;
   protein: number;
   fat: number;

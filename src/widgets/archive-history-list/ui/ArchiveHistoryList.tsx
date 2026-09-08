@@ -2,10 +2,30 @@ import React, { useEffect, useState } from "react";
 import { Card, Badge } from "@/shared/ui";
 import { mockArchivedWeeks } from "@/entities/metric";
 import { getPlans, type PlanRecord } from "@/shared/api";
-import { parsePlanContent } from "@/entities/plan";
+import { parsePlanContent, type PlanData } from "@/entities/plan";
+import { formatCurrencyInt } from "@/shared/lib";
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString("uk-UA", { day: "numeric", month: "short" });
+}
+
+/** У плані більше немає текстової відповіді — короткий опис збираємо з даних. */
+function buildPreview(plan: PlanData | null): string {
+  if (!plan) return "";
+  if (plan.summary.notes) return plan.summary.notes.replace(/\s+/g, " ").trim().slice(0, 90);
+  return `${plan.targets.kcal} ккал/день · ${plan.cart.length} позицій · ${formatCurrencyInt(
+    Math.round(plan.summary.total_uah)
+  )}`;
+}
+
+/**
+ * Заголовок план бекенд будує з тексту стріму; без token-подій туди потрапляє
+ * сирий SSE-лог, тож такі заголовки підміняємо датою.
+ */
+function planTitle(title: string, createdAt: string): string {
+  const looksLikeRawLog = title.includes("data:") || title.includes('{"type"');
+  if (title.trim() && !looksLikeRawLog) return title;
+  return `План від ${formatDate(createdAt)}`;
 }
 
 export const ArchiveHistoryList: React.FC = () => {
@@ -30,7 +50,7 @@ export const ArchiveHistoryList: React.FC = () => {
         <div className="divide-y divide-[#D8D2C2]/60">
           {plans.map((plan) => {
             const parsed = parsePlanContent(plan.content);
-            const preview = parsed?.answer.replace(/[#*\n]/g, " ").trim().slice(0, 90) ?? "";
+            const preview = buildPreview(parsed);
 
             return (
               <div
@@ -38,7 +58,9 @@ export const ArchiveHistoryList: React.FC = () => {
                 className="py-3.5 flex flex-col md:flex-row md:items-center justify-between gap-3 hover:bg-[#DFDACB]/30 px-2 rounded-lg transition-colors"
               >
                 <div>
-                  <div className="text-xs font-bold text-zinc-900">{plan.title}</div>
+                  <div className="text-xs font-bold text-zinc-900">
+                    {planTitle(plan.title, plan.created_at)}
+                  </div>
                   <div className="text-[11px] font-mono text-zinc-500 mt-0.5">
                     {preview}
                     {preview.length === 90 && "…"}

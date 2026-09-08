@@ -2,8 +2,20 @@ import React, { useState } from "react";
 import { Card, Progress, Button } from "@/shared/ui";
 import type { DailyMacroSummary } from "@/entities/meal";
 
+export interface WeekDayOption {
+  key: string;
+  label: string;
+  kcal: number;
+  note: string;
+}
+
 interface Props {
   macros: DailyMacroSummary;
+  days: WeekDayOption[];
+  activeDay: string;
+  onDayChange: (key: string) => void;
+  title?: string;
+  subtitle?: string;
   onRefreshClick?: () => void;
   onRegenerate?: (reason: string) => void;
   isRegenerating?: boolean;
@@ -11,11 +23,15 @@ interface Props {
 
 export const WeeklyMacros: React.FC<Props> = ({
   macros,
+  days,
+  activeDay,
+  onDayChange,
+  title = "Тиждень",
+  subtitle,
   onRefreshClick,
   onRegenerate,
   isRegenerating,
 }) => {
-  const [activeDay, setActiveDay] = useState("ПН");
   const [isReasonOpen, setIsReasonOpen] = useState(false);
   const [reason, setReason] = useState("");
 
@@ -26,46 +42,32 @@ export const WeeklyMacros: React.FC<Props> = ({
     setReason("");
   };
 
-  const days = [
-    { day: "ПН", cal: 1980, note: "СИЛОВІ" },
-    { day: "ВТ", cal: 1760, note: "КАРДІО" },
-    { day: "СР", cal: 1640, note: "ВІДПОЧИНОК" },
-    { day: "ЧТ", cal: 1980, note: "СИЛОВІ" },
-    { day: "ПТ", cal: 1640, note: "ВІДПОЧИНОК" },
-    { day: "СБ", cal: 2040, note: "СИЛОВІ" },
-    { day: "НД", cal: 1600, note: "ВІДПОЧИНОК" },
-  ];
-
   const macroCards = [
     {
       title: "КАЛОРІЇ",
       current: macros.calories.current,
       target: macros.calories.target,
       unit: "",
-      progress: (macros.calories.current / macros.calories.target) * 100,
     },
     {
       title: "БІЛКИ",
       current: macros.protein.current,
       target: macros.protein.target,
       unit: "г",
-      progress: (macros.protein.current / macros.protein.target) * 100,
     },
     {
       title: "ВУГЛЕВОДИ",
       current: macros.carbs.current,
       target: macros.carbs.target,
       unit: "г",
-      progress: (macros.carbs.current / macros.carbs.target) * 100,
     },
     {
       title: "ЖИРИ",
       current: macros.fat.current,
       target: macros.fat.target,
       unit: "г",
-      progress: (macros.fat.current / macros.fat.target) * 100,
     },
-  ];
+  ].map((m) => ({ ...m, progress: m.target > 0 ? (m.current / m.target) * 100 : 0 }));
 
   return (
     <div className="space-y-6">
@@ -73,11 +75,11 @@ export const WeeklyMacros: React.FC<Props> = ({
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-3xl font-black font-mono tracking-tight uppercase text-zinc-900">
-            Тиждень 12
+            {title}
           </h1>
-          <p className="text-xs text-zinc-500 font-mono mt-0.5">
-            8–14 вересня · схуднення · 1 780 ккал на день
-          </p>
+          {subtitle && (
+            <p className="text-xs text-zinc-500 font-mono mt-0.5">{subtitle}</p>
+          )}
         </div>
 
         <div className="flex gap-2">
@@ -119,20 +121,20 @@ export const WeeklyMacros: React.FC<Props> = ({
       {/* Селектор дней недели */}
       <div className="grid grid-cols-7 gap-2">
         {days.map((item) => {
-          const isSelected = activeDay === item.day;
+          const isSelected = activeDay === item.key;
           return (
             <button
-              key={item.day}
+              key={item.key}
               type="button"
-              onClick={() => setActiveDay(item.day)}
+              onClick={() => onDayChange(item.key)}
               className={`p-3 rounded-xl border flex flex-col items-center justify-center transition-all cursor-pointer ${
                 isSelected
                   ? "bg-[#D2F832] border-black text-black shadow-sm scale-[1.02]"
                   : "bg-[#ECE8DC] border-[#D8D2C2] text-zinc-700 hover:border-zinc-400"
               }`}
             >
-              <span className="text-xs font-mono font-black">{item.day}</span>
-              <span className="font-mono font-bold text-sm mt-0.5">{item.cal}</span>
+              <span className="text-xs font-mono font-black">{item.label}</span>
+              <span className="font-mono font-bold text-sm mt-0.5">{item.kcal}</span>
               <span className="text-[8px] font-mono tracking-tight text-zinc-500 uppercase mt-0.5">
                 {item.note}
               </span>

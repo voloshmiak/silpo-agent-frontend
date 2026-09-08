@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { Button } from "@/shared/ui";
 import { useAuthUser } from "@/entities/user";
-import { usePlanGeneration } from "@/features/generate-plan";
-import type { ParsedPlanContent } from "@/entities/plan";
+import { PlanGenerationLoader, usePlanGeneration } from "@/features/generate-plan";
+import type { PlanData } from "@/entities/plan";
 import { ONBOARDING_STEPS, useOnboardingForm } from "../model/useOnboardingForm";
 import { StepGoal } from "./steps/StepGoal";
 import { StepPhysical } from "./steps/StepPhysical";
@@ -12,7 +12,7 @@ import { StepBudget } from "./steps/StepBudget";
 import { saveSilpoToken } from "@/shared/api/users";
 
 interface Props {
-  onComplete: (plan: ParsedPlanContent) => void;
+  onComplete: (plan: PlanData) => void;
 }
 
 function buildNote(data: ReturnType<typeof useOnboardingForm>["data"]): string {
@@ -27,7 +27,7 @@ function buildNote(data: ReturnType<typeof useOnboardingForm>["data"]): string {
 export const OnboardingPage: React.FC<Props> = ({ onComplete }) => {
   const { step, data, update, goNext, goBack, canProceed, isLastStep } = useOnboardingForm();
   const { registerUser, updateProfile } = useAuthUser();
-  const { status, toolEvents, generate, error } = usePlanGeneration();
+  const { status, currentStep, generate, error } = usePlanGeneration();
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const isSubmitting = status === "streaming";
@@ -85,20 +85,7 @@ export const OnboardingPage: React.FC<Props> = ({ onComplete }) => {
   if (isSubmitting) {
     return (
       <div className="min-h-screen bg-[#F4F1E8] text-zinc-900 flex items-center justify-center font-sans p-6">
-        <div className="max-w-md w-full bg-[#ECE8DC] border border-[#D8D2C2] rounded-2xl p-8 text-center space-y-5">
-          <h2 className="text-xl font-black font-mono uppercase">Агент будує ваш план…</h2>
-          <p className="text-xs text-zinc-500">Це займе трохи часу — читаємо каталог «Сільпо» й рахуємо БЖВ</p>
-          <div className="space-y-2 text-left max-h-52 overflow-y-auto">
-            {toolEvents.map((event, idx) => (
-              <div
-                key={idx}
-                className="text-[11px] font-mono bg-[#DFDACB]/60 border border-[#D8D2C2] rounded-lg px-3 py-2 text-zinc-700"
-              >
-                {event.tool}
-              </div>
-            ))}
-          </div>
-        </div>
+        <PlanGenerationLoader step={currentStep} />
       </div>
     );
   }

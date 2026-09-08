@@ -11,25 +11,64 @@ export interface PlanStreamParams {
   planId?: string;
 }
 
-export interface PlanCartItem {
-  id: string;
-  name: string;
-  price: number;
-  [key: string]: unknown;
+export type PlanMealSlot = "breakfast" | "lunch" | "snack" | "dinner";
+
+export const PLAN_MEAL_SLOTS: PlanMealSlot[] = ["breakfast", "lunch", "snack", "dinner"];
+
+export interface PlanMeal {
+  title: string;
+  items: string[];
+  kcal: number;
+  protein_g: number;
+  fat_g: number;
+  carbs_g: number;
+}
+
+export interface PlanDay {
+  day: string;
+  workout: boolean;
+  kcal: number;
+  protein_g: number;
+  fat_g: number;
+  carbs_g: number;
+  breakfast?: PlanMeal;
+  lunch?: PlanMeal;
+  snack?: PlanMeal;
+  dinner?: PlanMeal;
 }
 
 export interface PlanTargets {
-  calories?: number;
-  protein?: number;
-  fat?: number;
-  carbs?: number;
-  [key: string]: unknown;
+  kcal: number;
+  protein_g: number;
+  fat_g: number;
+  carbs_g: number;
+  estimated_weeks_to_goal?: number;
+  estimated_goal_date?: string;
 }
 
-export interface PlanStreamResult {
-  answer: string;
-  cart_items: PlanCartItem[];
+export interface PlanCartItem {
+  name: string;
+  product_id: string;
+  quantity: number;
+  unit: string;
+  price: number;
+  total_price: number;
+}
+
+export interface PlanSummary {
+  total_uah: number;
+  budget_uah: number;
+  remaining_uah: number;
+  restrictions: string[];
+  promotions: string[];
+  notes?: string;
+}
+
+export interface PlanData {
   targets: PlanTargets;
+  days: PlanDay[];
+  cart: PlanCartItem[];
+  summary: PlanSummary;
 }
 
 export interface PlanToolCallEvent {
@@ -38,25 +77,33 @@ export interface PlanToolCallEvent {
   args: unknown;
 }
 
-export interface PlanTokenEvent {
-  type: "token";
-  text: string;
+export interface PlanToolResultEvent {
+  type: "tool_result";
+  tool: string;
+  ok: boolean;
+  result: string;
 }
 
 export interface PlanFinalEvent {
   type: "plan";
-  answer: string;
-  plan: {
-    cart_items: PlanCartItem[];
-    targets: PlanTargets;
-  };
+  plan: PlanData | null;
 }
 
-export type PlanStreamEvent = PlanToolCallEvent | PlanTokenEvent | PlanFinalEvent;
+export interface PlanErrorEvent {
+  type: "error";
+  message: string;
+  code?: string;
+}
+
+export type PlanStreamEvent =
+  | PlanToolCallEvent
+  | PlanToolResultEvent
+  | PlanFinalEvent
+  | PlanErrorEvent;
 
 interface StreamPlanHandlers {
   onToolCall?: (event: PlanToolCallEvent) => void;
-  onToken?: (event: PlanTokenEvent) => void;
+  onToolResult?: (event: PlanToolResultEvent) => void;
   signal?: AbortSignal;
 }
 
@@ -76,11 +123,16 @@ function buildQuery(params: PlanStreamParams): string {
 /**
  * Manually parses the `/plan/stream` SSE response. Native EventSource can't
  * send the Authorization header, so this reads the fetch body stream instead.
+ *
+ * The agent emits `tool_call`/`tool_result` while it works, then exactly one
+ * `plan` event carrying the whole structured plan — there is no text to stream
+ * token by token. Unknown event types are ignored on purpose, so a core that
+ * still sends the retired `token` events keeps working.
  */
 export async function streamPlan(
   params: PlanStreamParams,
   handlers: StreamPlanHandlers = {}
-): Promise<PlanStreamResult> {
+): Promise<PlanData> {
   const token = getToken();
   const response = await fetch(`${API_BASE_URL}/plan/stream?${buildQuery(params)}`, {
     headers: {
@@ -122,14 +174,23 @@ export async function streamPlan(
       const raw = dataLine.slice(5).trim();
       if (!raw) continue;
 
-      const event = JSON.parse(raw) as PlanStreamEvent;
+      let event: PlanStreamEvent;
+      try {
+        event = JSON.parse(raw) as PlanStreamEvent;
+      } catch {
+        // пошкоджений фрейм не має валити всю генерацію
+        continue;
+      }
 
       if (event.type === "tool_call") {
         handlers.onToolCall?.(event);
-      } else if (event.type === "token") {
-        handlers.onToken?.(event);
+      } else if (event.type === "tool_result") {
+        handlers.onToolResult?.(event);
       } else if (event.type === "plan") {
         final = event;
+      } else if (event.type === "error") {
+        // Заголовки вже відправлені, тож збій агента приходить подією, не статусом
+        throw new Error(event.message || "Агент завершив роботу з помилкою");
       }
     }
   }
@@ -138,9 +199,9 @@ export async function streamPlan(
     throw new Error("Стрім завершився без фінального плану");
   }
 
-  return {
-    answer: final.answer,
-    cart_items: final.plan.cart_items,
-    targets: final.plan.targets,
-  };
+  if (!final.plan) {
+    throw new Error("Агент не сформував план — спробуйте ще раз");
+  }
+
+  return final.plan;
 }

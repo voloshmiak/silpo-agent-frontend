@@ -31,14 +31,26 @@ export const MealRow: React.FC<Props> = ({ meal, onToggleComplete }) => {
 
           <h3 className="text-xs font-bold text-zinc-900 mt-0.5">{meal.title}</h3>
 
+          {meal.items && meal.items.length > 0 && (
+            <p className="text-[11px] text-zinc-500 mt-0.5 leading-snug">
+              {meal.items.join(" · ")}
+            </p>
+          )}
+
           <div className="flex items-center gap-2 mt-1 text-[11px] font-mono text-zinc-600">
             <span>Б <b className="text-zinc-900">{meal.protein} г</b></span>
             <span>Ж <b className="text-zinc-900">{meal.fat} г</b></span>
             <span>В <b className="text-zinc-900">{meal.carbs} г</b></span>
-            <span className="text-zinc-400">·</span>
-            <span>
-              {meal.cookingTimeMinutes > 0 ? `Готувати ${meal.cookingTimeMinutes} хв` : "Без готування"}
-            </span>
+            {meal.cookingTimeMinutes !== undefined && (
+              <>
+                <span className="text-zinc-400">·</span>
+                <span>
+                  {meal.cookingTimeMinutes > 0
+                    ? `Готувати ${meal.cookingTimeMinutes} хв`
+                    : "Без готування"}
+                </span>
+              </>
+            )}
           </div>
         </div>
       </div>
