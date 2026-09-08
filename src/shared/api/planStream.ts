@@ -1,4 +1,5 @@
-import { API_BASE_URL, getToken } from "./base";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { API_BASE_URL, getToken, apiClient } from "./base";
 
 export interface PlanStreamParams {
   budgetUah: number;
@@ -159,7 +160,7 @@ export async function streamPlan(
   const reader = response.body.getReader();
   const decoder = new TextDecoder();
   let buffer = "";
-  let final: PlanFinalEvent | null = null;
+  let extractedPlan: any = null;
 
   while (true) {
     const { done, value } = await reader.read();
@@ -178,11 +179,10 @@ export async function streamPlan(
       const raw = dataLine.slice(5).trim();
       if (!raw) continue;
 
-      let event: PlanStreamEvent;
+      let event: any;
       try {
-        event = JSON.parse(raw) as PlanStreamEvent;
+        event = JSON.parse(raw);
       } catch {
-        // пошкоджений фрейм не має валити всю генерацію
         continue;
       }
 
@@ -190,22 +190,40 @@ export async function streamPlan(
         handlers.onToolCall?.(event);
       } else if (event.type === "tool_result") {
         handlers.onToolResult?.(event);
-      } else if (event.type === "plan") {
-        final = event;
+      } else if (event.type === "plan" || event.type === "done") {
+        // Поддерживаем разные варианты упаковки плана бэкендером
+        extractedPlan = event.plan || event.plan_data || event;
       } else if (event.type === "error") {
-        // Заголовки вже відправлені, тож збій агента приходить подією, не статусом
         throw new Error(event.message || "Агент завершив роботу з помилкою");
       }
     }
   }
 
-  if (!final) {
-    throw new Error("Стрім завершився без фінального плану");
+  // Если в потоке пришел валидный план — возвращаем его
+  if (extractedPlan && (extractedPlan.days || extractedPlan.cart || extractedPlan.cart_items)) {
+    return extractedPlan as PlanData;
   }
 
-  if (!final.plan) {
-    throw new Error("Агент не сформував план — спробуйте ще раз");
+  // FALLBACK: если стрим закрылся, но бэкенд успел сохранить план в базу (/plans)
+  try {
+    const plans = await apiClient<any[]>("/plans?limit=1&offset=0");
+    if (plans && plans.length > 0) {
+      const latest = plans[0];
+      const parsedContent =
+        typeof latest.content === "string"
+          ? JSON.parse(latest.content)
+          : latest.content;
+
+      const planData =
+        parsedContent.plan_data || parsedContent.plan || parsedContent;
+
+      if (planData) {
+        return planData as PlanData;
+      }
+    }
+  } catch (err) {
+    console.warn("Не вдалося підтягнути план з /plans fallback:", err);
   }
 
-  return final.plan;
+  throw new Error("Стрім завершився без фінального плану");
 }
