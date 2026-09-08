@@ -1,6 +1,6 @@
 const API_BASE_URL =
   import.meta.env.VITE_API_URL ||
-  "https://silpo-agent-backend-241107674482.europe-central2.run.app/api";
+  "https://silpo-agent-backend-241107674482.europe-central2.run.app";
 
 const TOKEN_STORAGE_KEY = "silpofit_token";
 

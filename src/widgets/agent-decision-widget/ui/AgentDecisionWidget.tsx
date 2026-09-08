@@ -87,5 +87,6 @@ export const AgentDecisionWidget: React.FC = () => {
         </p>
       </div>
     </Card>
-  );
+  
+);
 };

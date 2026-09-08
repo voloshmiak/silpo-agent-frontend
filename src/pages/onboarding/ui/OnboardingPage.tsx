@@ -9,6 +9,7 @@ import { StepPhysical } from "./steps/StepPhysical";
 import { StepDiet } from "./steps/StepDiet";
 import { StepTraining } from "./steps/StepTraining";
 import { StepBudget } from "./steps/StepBudget";
+import { saveSilpoToken } from "@/shared/api/users";
 
 interface Props {
   onComplete: (plan: ParsedPlanContent) => void;
@@ -31,6 +32,10 @@ export const OnboardingPage: React.FC<Props> = ({ onComplete }) => {
 
   const isSubmitting = status === "streaming";
 
+ // Токен Сільпо з інструкції для демо
+  const DEFAULT_SILPO_TOKEN =
+    "5e1c10ca-0378-4523-abd4-9b5b3cce6084:QtV0Jndg1FHwmBEc:CCaxBjRZE1Ix2zP9sUHfEMOdJOsN5xW5";
+
   const handlePrimaryAction = async () => {
     if (!isLastStep) {
       goNext();
@@ -39,20 +44,29 @@ export const OnboardingPage: React.FC<Props> = ({ onComplete }) => {
 
     setSubmitError(null);
     try {
-      await registerUser(data.name.trim());
+      const userName = data.name.trim() || "Користувач";
+
+      // 1. Створюємо юзера та записуємо JWT
+      await registerUser(userName);
+
+      // 2. Оновлюємо зріст та вагу
       await updateProfile({
-        name: data.name.trim(),
-        weight: Number(data.currentWeightKg),
-        height: Number(data.heightCm),
+        name: userName,
+        weight: Number(data.currentWeightKg) || 75,
+        height: Number(data.heightCm) || 180,
       });
 
+      // 3. Зберігаємо токен Сільпо на бекенді (критично перед генерацією)
+      await saveSilpoToken(DEFAULT_SILPO_TOKEN);
+
+      // 4. Запускаємо SSE-потік генерації плану
       const plan = await generate({
-        budgetUah: Number(data.budgetUah),
-        workouts: data.weeklyWorkoutsCount,
+        budgetUah: Number(data.budgetUah) || 2000,
+        workouts: data.weeklyWorkoutsCount ?? 3,
         sex: data.gender === "чол." ? "male" : "female",
-        age: Number(data.age),
+        age: Number(data.age) || 25,
         note: buildNote(data),
-        targetWeight: Number(data.targetWeightKg),
+        targetWeight: data.targetWeightKg ? Number(data.targetWeightKg) : undefined,
       });
 
       onComplete(plan);
@@ -60,7 +74,6 @@ export const OnboardingPage: React.FC<Props> = ({ onComplete }) => {
       setSubmitError(err instanceof Error ? err.message : "Щось пішло не так");
     }
   };
-
   const steps = [
     <StepGoal data={data} update={update} />,
     <StepPhysical data={data} update={update} />,
