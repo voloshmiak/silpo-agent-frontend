@@ -19,19 +19,6 @@ export async function getMe(): Promise<BackendUser> {
   return apiClient<BackendUser>("/users/me");
 }
 
-export interface UpdateMePayload {
-  name: string;
-  weight: number;
-  height: number;
-}
-
-export async function updateMe(payload: UpdateMePayload): Promise<BackendUser> {
-  return apiClient<BackendUser>("/users/me", {
-    method: "PUT",
-    body: JSON.stringify(payload),
-  });
-}
-
 export async function saveSilpoToken(
   accessToken: string,
   refreshToken?: string

@@ -72,3 +72,44 @@ body {
     color: var(--foreground);
   }
 }
+
+/* --- Скелетон завантаження: діагональна хвиля через усі картки --- */
+
+@keyframes skeleton-sweep {
+  from { transform: translateX(-100%); }
+  to   { transform: translateX(100%); }
+}
+
+.skeleton-sweep {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Одна світла смуга під нахилом проходить по всій сітці карток, а не по
+   кожній окремо — так завантаження читається як цілісний екран. */
+.skeleton-sweep::after {
+  content: "";
+  position: absolute;
+  inset: -25% -10%;
+  background: linear-gradient(
+    115deg,
+    transparent 42%,
+    rgba(255, 255, 255, 0.75) 50%,
+    transparent 58%
+  );
+  animation: skeleton-sweep 1.9s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.skeleton-block {
+  background-color: #DFDACB;
+  border-radius: 6px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-sweep::after {
+    animation: none;
+    opacity: 0.35;
+    transform: none;
+  }
+}

@@ -3,15 +3,16 @@ import { Button } from "@/shared/ui";
 import { useAuthUser } from "@/entities/user";
 import { PlanGenerationLoader, usePlanGeneration } from "@/features/generate-plan";
 import type { PlanData } from "@/entities/plan";
-import { ONBOARDING_STEPS, useOnboardingForm } from "../model/useOnboardingForm";
+import { ONBOARDING_STEPS, useOnboardingForm, workoutsPerWeek } from "../model/useOnboardingForm";
 import { StepGoal } from "./steps/StepGoal";
 import { StepPhysical } from "./steps/StepPhysical";
 import { StepDiet } from "./steps/StepDiet";
 import { StepTraining } from "./steps/StepTraining";
 import { StepBudget } from "./steps/StepBudget";
+import { StepSilpo } from "./steps/StepSilpo";
 import { saveSilpoToken } from "@/shared/api/users";
 import { updateSettings } from "@/shared/api";
-import { defaultPaceForFocus, defaultScheduleMap } from "@/entities/user";
+import { defaultPaceForFocus, scheduleToMap } from "@/entities/user";
 
 interface Props {
   onComplete: (plan: PlanData) => void;
@@ -28,15 +29,11 @@ function buildNote(data: ReturnType<typeof useOnboardingForm>["data"]): string {
 
 export const OnboardingPage: React.FC<Props> = ({ onComplete }) => {
   const { step, data, update, goNext, goBack, canProceed, isLastStep } = useOnboardingForm();
-  const { registerUser, updateProfile } = useAuthUser();
+  const { registerUser } = useAuthUser();
   const { status, currentStep, generate, error } = usePlanGeneration();
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const isSubmitting = status === "streaming";
-
- // Токен Сільпо з інструкції для демо
-  const DEFAULT_SILPO_TOKEN =
-    "5e1c10ca-0378-4523-abd4-9b5b3cce6084:QtV0Jndg1FHwmBEc:CCaxBjRZE1Ix2zP9sUHfEMOdJOsN5xW5";
 
   const handlePrimaryAction = async () => {
     if (!isLastStep) {
@@ -51,14 +48,8 @@ export const OnboardingPage: React.FC<Props> = ({ onComplete }) => {
       // 1. Створюємо юзера та записуємо JWT
       await registerUser(userName);
 
-      // 2. Оновлюємо зріст та вагу
-      await updateProfile({
-        name: userName,
-        weight: Number(data.currentWeightKg) || 75,
-        height: Number(data.heightCm) || 180,
-      });
-
-      // 3. Зберігаємо параметри та обмеження — усі 4 блоки екрана профілю
+      // 2. Зберігаємо параметри та обмеження — усі 4 блоки екрана профілю
+      //    (зріст і вага теж живуть тут, окремого PUT /users/me більше немає)
       await updateSettings({
         weight: Number(data.currentWeightKg) || 75,
         target_weight:
@@ -68,8 +59,8 @@ export const OnboardingPage: React.FC<Props> = ({ onComplete }) => {
         sex: data.gender,
         focus: data.focus,
         weekly_pace: defaultPaceForFocus(data.focus),
-        workouts_per_week: data.weeklyWorkoutsCount,
-        workout_schedule: defaultScheduleMap(data.weeklyWorkoutsCount),
+        workouts_per_week: workoutsPerWeek(data),
+        workout_schedule: scheduleToMap(data.workoutDays),
         missed_workout_today: false,
         allergens: data.allergens,
         excluded_products: data.stopProducts,
@@ -79,13 +70,13 @@ export const OnboardingPage: React.FC<Props> = ({ onComplete }) => {
         delivery_included: true,
       });
 
-      // 4. Зберігаємо токен Сільпо на бекенді (критично перед генерацією)
-      await saveSilpoToken(DEFAULT_SILPO_TOKEN);
+      // 3. Зберігаємо токен Сільпо, отриманий на кроці входу (критично перед генерацією)
+      await saveSilpoToken(data.silpoAccessToken, data.silpoRefreshToken || undefined);
 
-      // 5. Запускаємо SSE-потік генерації плану
+      // 4. Запускаємо SSE-потік генерації плану
       const plan = await generate({
         budgetUah: Number(data.budgetUah) || 2000,
-        workouts: data.weeklyWorkoutsCount ?? 3,
+        workouts: workoutsPerWeek(data),
         sex: data.gender === "чол." ? "male" : "female",
         age: Number(data.age) || 25,
         note: buildNote(data),
@@ -103,6 +94,7 @@ export const OnboardingPage: React.FC<Props> = ({ onComplete }) => {
     <StepDiet data={data} update={update} />,
     <StepTraining data={data} update={update} />,
     <StepBudget data={data} update={update} />,
+    <StepSilpo data={data} update={update} />,
   ];
 
   if (isSubmitting) {

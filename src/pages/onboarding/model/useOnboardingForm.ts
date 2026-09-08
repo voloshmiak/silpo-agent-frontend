@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { countWorkouts, scheduleFromMap, type WorkoutScheduleItem } from "@/entities/user";
 
 export interface OnboardingFormData {
   name: string;
@@ -12,8 +13,11 @@ export interface OnboardingFormData {
   allergens: string[];
   stopProducts: string[];
   note: string;
-  weeklyWorkoutsCount: number;
+  workoutDays: WorkoutScheduleItem[];
   budgetUah: number | "";
+  /** Токени «Сільпо», отримані на кроці входу — їдуть на бекенд перед генерацією */
+  silpoAccessToken: string;
+  silpoRefreshToken: string;
 }
 
 export const ONBOARDING_STEPS = [
@@ -22,6 +26,7 @@ export const ONBOARDING_STEPS = [
   "Дієта й обмеження",
   "Тренування",
   "Бюджет",
+  "Сільпо",
 ] as const;
 
 const initialData: OnboardingFormData = {
@@ -36,8 +41,10 @@ const initialData: OnboardingFormData = {
   allergens: [],
   stopProducts: [],
   note: "",
-  weeklyWorkoutsCount: 3,
+  workoutDays: scheduleFromMap({ "ПН": "силові", "СР": "силові", "ПТ": "силові" }),
   budgetUah: 2000,
+  silpoAccessToken: "",
+  silpoRefreshToken: "",
 };
 
 export function isStepValid(step: number, data: OnboardingFormData): boolean {
@@ -52,9 +59,15 @@ export function isStepValid(step: number, data: OnboardingFormData): boolean {
       return true;
     case 4:
       return data.budgetUah !== "" && Number(data.budgetUah) > 0;
+    case 5:
+      return data.silpoAccessToken.trim().length > 0;
     default:
       return false;
   }
+}
+
+export function workoutsPerWeek(data: OnboardingFormData): number {
+  return countWorkouts(data.workoutDays);
 }
 
 export const useOnboardingForm = () => {

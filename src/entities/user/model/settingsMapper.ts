@@ -3,9 +3,6 @@ import type { DayOfWeek, UserProfile, WorkoutScheduleItem, WorkoutType } from ".
 
 export const WEEK_DAYS: DayOfWeek[] = ["ПН", "ВТ", "СР", "ЧТ", "ПТ", "СБ", "НД"];
 
-/** Порядок, у якому розкидаємо тренування, коли користувач не обрав конкретні дні. */
-const DEFAULT_WORKOUT_ORDER: DayOfWeek[] = ["ПН", "СР", "ПТ", "ВТ", "ЧТ", "СБ", "НД"];
-
 const PROMO_PRIORITIES = ["Високий", "Середній", "Низький"] as const;
 type PromoPriority = (typeof PROMO_PRIORITIES)[number];
 
@@ -35,20 +32,16 @@ export function scheduleFromMap(map: Record<string, string>): WorkoutScheduleIte
   });
 }
 
+/** workouts_per_week має збігатися з кількістю активних днів у розкладі. */
+export function countWorkouts(days: WorkoutScheduleItem[]): number {
+  return days.filter((item) => item.isActive).length;
+}
+
 /** Назад у контракт потрапляють лише активні дні — так само, як їх віддає бекенд. */
 export function scheduleToMap(days: WorkoutScheduleItem[]): Record<string, string> {
   const map: Record<string, string> = {};
   for (const item of days) {
     if (item.isActive && item.type !== "—") map[item.day] = item.type.toLowerCase();
-  }
-  return map;
-}
-
-/** Розклад за замовчуванням для онбордингу, де користувач вказав лише кількість тренувань. */
-export function defaultScheduleMap(workoutsPerWeek: number): Record<string, string> {
-  const map: Record<string, string> = {};
-  for (const day of DEFAULT_WORKOUT_ORDER.slice(0, Math.max(0, workoutsPerWeek))) {
-    map[day] = "силові";
   }
   return map;
 }

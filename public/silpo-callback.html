@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="uk">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Вхід через Сільпо</title>
+    <style>
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f4f1e8;
+        color: #18181b;
+        font: 600 13px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
+        text-align: center;
+        padding: 24px;
+      }
+    </style>
+  </head>
+  <body>
+    <p id="status">Завершуємо вхід…</p>
+    <script>
+      // Сторінка існує лише щоб віддати authorization code відкривачу:
+      // OAuth-обмін на токен відбувається у застосунку, не тут.
+      (function () {
+        var params = new URLSearchParams(window.location.search);
+        var payload = {
+          source: "silpo-oauth",
+          code: params.get("code"),
+          state: params.get("state"),
+          error: params.get("error"),
+          errorDescription: params.get("error_description"),
+        };
+
+        if (window.opener) {
+          window.opener.postMessage(payload, window.location.origin);
+          window.close();
+        } else {
+          document.getElementById("status").textContent = payload.error
+            ? "Вхід не вдався: " + payload.error
+            : "Вікно можна закрити.";
+        }
+      })();
+    </script>
+  </body>
+</html>

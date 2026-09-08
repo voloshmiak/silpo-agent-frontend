@@ -1,12 +1,12 @@
-import React, { useState } from "react";
-import { useUserProfile, useAuthUser } from "@/entities/user";
+import React from "react";
+import { useUserProfile } from "@/entities/user";
 import {
   PhysicalDataCard,
   SportScheduleCard,
   DietaryCard,
   BudgetCard,
 } from "@/widgets/profile-cards";
-import { Button, Card, FieldLabel, TextInput } from "@/shared/ui";
+import { ProfileSkeleton } from "./ProfileSkeleton";
 
 export const ProfilePage: React.FC = () => {
   const {
@@ -20,21 +20,9 @@ export const ProfilePage: React.FC = () => {
     error: settingsError,
     isDirty,
   } = useUserProfile();
-  const { user, isLoading, updateProfile: updateBackendProfile } = useAuthUser();
-
-  const [name, setName] = useState("");
-  const [height, setHeight] = useState<number | "">("");
-  const [weight, setWeight] = useState<number | "">("");
-  const [isSavingBackend, setIsSavingBackend] = useState(false);
-  const [saveError, setSaveError] = useState<string | null>(null);
-
-  // Синхронізуємо чернетку форми з даними, щойно вони прийшли з бекенду.
-  const [loadedUserId, setLoadedUserId] = useState<string | null>(null);
-  if (user && user.id !== loadedUserId) {
-    setLoadedUserId(user.id);
-    setName(user.name);
-    setHeight(user.height);
-    setWeight(user.weight);
+  // Доки налаштування їдуть з бекенду, показуємо скелетон замість чужих цифр
+  if (isLoadingSettings || !profile) {
+    return <ProfileSkeleton />;
   }
 
   const handleBudgetChange = (weeklyLimit: number) => {
@@ -65,27 +53,6 @@ export const ProfilePage: React.FC = () => {
     });
   };
 
-  const handleSaveBackendProfile = async () => {
-    if (!name.trim() || height === "" || weight === "") return;
-    setIsSavingBackend(true);
-    setSaveError(null);
-    try {
-      await updateBackendProfile({ name: name.trim(), height: Number(height), weight: Number(weight) });
-      // Вага та зріст дублюються в налаштуваннях — тримаємо їх синхронними
-      updateProfile({
-        physical: {
-          ...profile.physical,
-          heightCm: Number(height),
-          currentWeightKg: Number(weight),
-        },
-      });
-    } catch (err) {
-      setSaveError(err instanceof Error ? err.message : "Не вдалося зберегти");
-    } finally {
-      setIsSavingBackend(false);
-    }
-  };
-
   return (
     <div className="max-w-6xl w-full mx-auto p-8 space-y-6">
         <div className="flex items-start justify-between">
@@ -94,9 +61,7 @@ export const ProfilePage: React.FC = () => {
               Параметри та обмеження
             </h1>
             <p className="text-xs text-zinc-500 mt-1">
-              {isLoadingSettings
-                ? "Завантажуємо збережені параметри…"
-                : "Зміни застосовуються до наступного тижневого плану"}
+              Зміни застосовуються до наступного тижневого плану
             </p>
           </div>
 
@@ -110,7 +75,7 @@ export const ProfilePage: React.FC = () => {
             </button>
             <button
               onClick={saveChanges}
-              disabled={isSaving || isLoadingSettings || !isDirty}
+              disabled={isSaving || !isDirty}
               className="px-4 py-2 rounded-md bg-[#D2F832] border border-black text-black text-xs font-bold uppercase tracking-wider hover:brightness-95 transition shadow-sm disabled:opacity-50 cursor-pointer"
             >
               {isSaving
@@ -126,56 +91,11 @@ export const ProfilePage: React.FC = () => {
           <p className="text-xs text-[#FF5C00] font-semibold">{settingsError}</p>
         )}
 
-        <Card className="p-6">
-          <h2 className="text-xs font-mono font-bold tracking-widest uppercase mb-4">
-            Ім'я, зріст, вага
-          </h2>
-          <p className="text-xs text-zinc-500 mb-4">
-            Ці дані зберігаються на бекенді та використовуються для розрахунку калорій.
-          </p>
-
-          {isLoading ? (
-            <p className="text-xs text-zinc-500">Завантаження…</p>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div>
-                <FieldLabel>Ім'я</FieldLabel>
-                <TextInput value={name} onChange={(e) => setName(e.target.value)} />
-              </div>
-              <div>
-                <FieldLabel hint="см">Зріст</FieldLabel>
-                <TextInput
-                  type="number"
-                  value={height}
-                  onChange={(e) => setHeight(e.target.value === "" ? "" : Number(e.target.value))}
-                />
-              </div>
-              <div>
-                <FieldLabel hint="кг">Вага</FieldLabel>
-                <TextInput
-                  type="number"
-                  value={weight}
-                  onChange={(e) => setWeight(e.target.value === "" ? "" : Number(e.target.value))}
-                />
-              </div>
-            </div>
-          )}
-
-          {saveError && <p className="text-xs text-[#FF5C00] font-semibold mt-3">{saveError}</p>}
-
-          <Button
-            variant="lime"
-            size="sm"
-            className="mt-4"
-            disabled={isSavingBackend || isLoading}
-            onClick={handleSaveBackendProfile}
-          >
-            {isSavingBackend ? "Збереження..." : "Зберегти на бекенді"}
-          </Button>
-        </Card>
-
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <PhysicalDataCard data={profile.physical} />
+          <PhysicalDataCard
+            data={profile.physical}
+            onChange={(physical) => updateProfile({ physical })}
+          />
           <SportScheduleCard
             schedule={profile.schedule}
             onChange={handleScheduleChange}

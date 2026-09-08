@@ -2,11 +2,9 @@ import React, { useEffect, useMemo, useState } from "react";
 import { WeeklyMacros, type WeekDayOption } from "@/widgets/weekly-macros";
 import { MealTimeline } from "@/widgets/meal-timeline";
 import { CartSummary } from "@/widgets/cart-summary";
-import { Card } from "@/shared/ui";
-import { mockMealItems, mockDailyMacros } from "@/entities/meal";
-import { mockCartData } from "@/entities/cart";
+import { Button, Card } from "@/shared/ui";
 import { useUserProfile } from "@/entities/user";
-import { getPlans, type PlanRecord } from "@/shared/api";
+import { getPlans, getToken, type PlanRecord } from "@/shared/api";
 import {
   dayFullLabel,
   dayLabel,
@@ -18,20 +16,11 @@ import {
 } from "@/entities/plan";
 import { PlanGenerationLoader, usePlanGeneration } from "@/features/generate-plan";
 import { formatCurrency } from "@/shared/lib";
+import { WeekPlanSkeleton } from "./WeekPlanSkeleton";
 
 interface Props {
   initialPlan?: PlanData | null;
 }
-
-const MOCK_DAYS: WeekDayOption[] = [
-  { key: "ПН", label: "ПН", kcal: 1980, note: "СИЛОВІ" },
-  { key: "ВТ", label: "ВТ", kcal: 1760, note: "КАРДІО" },
-  { key: "СР", label: "СР", kcal: 1640, note: "ВІДПОЧИНОК" },
-  { key: "ЧТ", label: "ЧТ", kcal: 1980, note: "СИЛОВІ" },
-  { key: "ПТ", label: "ПТ", kcal: 1640, note: "ВІДПОЧИНОК" },
-  { key: "СБ", label: "СБ", kcal: 2040, note: "СИЛОВІ" },
-  { key: "НД", label: "НД", kcal: 1600, note: "ВІДПОЧИНОК" },
-];
 
 export const WeekPlanPage: React.FC<Props> = ({ initialPlan }) => {
   const { profile } = useUserProfile();
@@ -41,6 +30,9 @@ export const WeekPlanPage: React.FC<Props> = ({ initialPlan }) => {
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
   const [completedMeals, setCompletedMeals] = useState<Record<string, boolean>>({});
   const [renderedPlan, setRenderedPlan] = useState<PlanData | null>(plan);
+  const [isLoadingPlan, setIsLoadingPlan] = useState(
+    () => !initialPlan && Boolean(getToken())
+  );
   const { generate, status: regenStatus, currentStep, error: regenError } = usePlanGeneration();
 
   useEffect(() => {
@@ -53,8 +45,9 @@ export const WeekPlanPage: React.FC<Props> = ({ initialPlan }) => {
         setPlan(parsePlanContent(latest.content));
       })
       .catch(() => {
-        // не авторизовано або бек недоступний — лишаємось на демо-даних
-      });
+        // не авторизовано або бек недоступний — покажемо порожній стан
+      })
+      .finally(() => setIsLoadingPlan(false));
   }, [initialPlan]);
 
   // Новий план — скидаємо вибраний день і відмітки виконання
@@ -64,10 +57,10 @@ export const WeekPlanPage: React.FC<Props> = ({ initialPlan }) => {
     setCompletedMeals({});
   }
 
-  const activeDay = selectedDay ?? plan?.days[0]?.day ?? MOCK_DAYS[0].key;
+  const activeDay = selectedDay ?? plan?.days[0]?.day ?? "";
 
   const days: WeekDayOption[] = useMemo(() => {
-    if (!plan) return MOCK_DAYS;
+    if (!plan) return [];
     return plan.days.map((day) => ({
       key: day.day,
       label: dayLabel(day.day),
@@ -79,29 +72,19 @@ export const WeekPlanPage: React.FC<Props> = ({ initialPlan }) => {
   const activeDayData = plan?.days.find((day) => day.day === activeDay) ?? plan?.days[0];
 
   const meals = useMemo(() => {
-    const source = activeDayData ? planDayToMeals(activeDayData) : mockMealItems;
+    const source = activeDayData ? planDayToMeals(activeDayData) : [];
     return source.map((meal) => ({
       ...meal,
       isCompleted: completedMeals[meal.id] ?? meal.isCompleted,
     }));
   }, [activeDayData, completedMeals]);
 
-  const macros = plan && activeDayData ? planDayToMacros(activeDayData, plan) : mockDailyMacros;
-  const cart = plan ? planToCartData(plan) : mockCartData;
-
-  const subtitle = plan
-    ? `ціль ${plan.targets.kcal} ккал/день · Б ${plan.targets.protein_g} · Ж ${plan.targets.fat_g} · В ${plan.targets.carbs_g}`
-    : "8–14 вересня · схуднення · 1 780 ккал на день";
-
-  const timelineTitle = activeDayData
-    ? `${dayFullLabel(activeDayData.day)} · ${activeDayData.workout ? "тренування" : "відпочинок"}`
-    : "Понеділок · Силове о 19:00";
-
   const handleToggleMeal = (id: string) => {
     setCompletedMeals((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
   const handleRegenerate = async (reason: string) => {
+    if (!profile) return;
     try {
       const result = await generate({
         budgetUah: profile.budget.weeklyLimit,
@@ -120,6 +103,51 @@ export const WeekPlanPage: React.FC<Props> = ({ initialPlan }) => {
 
   const isRegenerating = regenStatus === "streaming";
 
+  if (isLoadingPlan) {
+    return <WeekPlanSkeleton />;
+  }
+
+  // Плану ще немає (або він без днів) — показуємо порожній стан, а не демо-тиждень
+  if (!plan || !activeDayData) {
+    return (
+      <div className="max-w-6xl w-full mx-auto p-8">
+        {isRegenerating ? (
+          <div className="flex justify-center py-8">
+            <PlanGenerationLoader step={currentStep} />
+          </div>
+        ) : (
+          <Card className="p-8 text-center space-y-4 max-w-lg mx-auto">
+            <h2 className="text-lg font-black font-mono uppercase tracking-tight">
+              Плану ще немає
+            </h2>
+            <p className="text-xs text-zinc-500">
+              Агент побудує тиждень із раціоном і кошиком «Сільпо» на основі ваших
+              параметрів та бюджету.
+            </p>
+            {regenStatus === "error" && regenError && (
+              <p className="text-xs text-[#FF5C00] font-semibold">{regenError}</p>
+            )}
+            <Button
+              variant="lime"
+              size="lg"
+              disabled={!profile}
+              onClick={() => handleRegenerate("")}
+            >
+              {profile ? "Згенерувати план →" : "Завантажуємо параметри…"}
+            </Button>
+          </Card>
+        )}
+      </div>
+    );
+  }
+
+  const macros = planDayToMacros(activeDayData, plan);
+  const cart = planToCartData(plan);
+  const subtitle = `ціль ${plan.targets.kcal} ккал/день · Б ${plan.targets.protein_g} · Ж ${plan.targets.fat_g} · В ${plan.targets.carbs_g}`;
+  const timelineTitle = `${dayFullLabel(activeDayData.day)} · ${
+    activeDayData.workout ? "тренування" : "відпочинок"
+  }`;
+
   return (
     <div className="max-w-6xl w-full mx-auto p-8 space-y-6">
       <WeeklyMacros
@@ -137,7 +165,7 @@ export const WeekPlanPage: React.FC<Props> = ({ initialPlan }) => {
         <p className="text-xs text-[#FF5C00] font-semibold">{regenError}</p>
       )}
 
-      {plan && <PlanNotes plan={plan} />}
+      <PlanNotes plan={plan} />
 
       {isRegenerating ? (
         <div className="flex justify-center py-8">

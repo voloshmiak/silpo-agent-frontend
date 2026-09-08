@@ -1,4 +1,12 @@
-import { useState } from "react";
+import {
+  BrowserRouter,
+  Navigate,
+  Outlet,
+  Route,
+  Routes,
+  useLocation,
+  useNavigate,
+} from "react-router-dom";
 import { Header } from "@/widgets/header";
 import { ProfilePage } from "@/pages/profile";
 import { WeekPlanPage } from "@/pages/week-plan";
@@ -9,39 +17,93 @@ import { useAuthUser } from "@/entities/user";
 import type { PlanData } from "@/entities/plan";
 
 export function App() {
-  const [currentTab, setCurrentTab] = useState("Тиждень");
-  const [generatedPlan, setGeneratedPlan] = useState<PlanData | null>(null);
-  const [onboardingDone, setOnboardingDone] = useState(false);
-  const { isAuthenticated, isLoading } = useAuthUser();
+  return (
+    <BrowserRouter>
+      <AppRoutes />
+    </BrowserRouter>
+  );
+}
 
+function AppRoutes() {
+  // Єдина точка авторизації: хук робить GET /users/me, тож викликаємо його
+  // тут один раз і передаємо результат униз, а не смикаємо в кожному екрані
+  const { user, isAuthenticated, isLoading, logout } = useAuthUser();
+
+  // Доки не знаємо, чи є валідний JWT, не можна вирішувати, куди пускати
   if (isLoading) {
     return <div className="min-h-screen bg-[#F4F1E8]" />;
   }
 
-  if (!isAuthenticated && !onboardingDone) {
-    return (
-      <OnboardingPage
-        onComplete={(plan) => {
-          setGeneratedPlan(plan);
-          setOnboardingDone(true);
-          setCurrentTab("Тиждень");
-        }}
+  return (
+    <Routes>
+      <Route
+        path="/onboarding"
+        element={isAuthenticated ? <Navigate to="/week" replace /> : <OnboardingRoute />}
       />
-    );
-  }
+
+      <Route
+        element={
+          isAuthenticated ? (
+            <AppLayout userName={user?.name ?? ""} onLogout={logout} />
+          ) : (
+            <Navigate to="/onboarding" replace />
+          )
+        }
+      >
+        <Route path="/week" element={<WeekRoute />} />
+        <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/archive" element={<ArchivePage />} />
+        <Route path="/feedback" element={<FeedbackPage />} />
+      </Route>
+
+      <Route path="*" element={<Navigate to="/week" replace />} />
+    </Routes>
+  );
+}
+
+function AppLayout({
+  userName,
+  onLogout,
+}: {
+  userName: string;
+  onLogout: () => void;
+}) {
+  const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-[#F4F1E8] text-zinc-900 flex flex-col font-sans">
-      <Header activeTab={currentTab} onTabChange={setCurrentTab} />
+      <Header
+        userName={userName}
+        onLogout={() => {
+          onLogout();
+          navigate("/onboarding", { replace: true });
+        }}
+      />
 
       <main className="flex-1">
-        {currentTab === "Профіль" && <ProfilePage />}
-        {currentTab === "Тиждень" && <WeekPlanPage initialPlan={generatedPlan} />}
-        {currentTab === "Архів" && <ArchivePage />}
-        {currentTab === "Фідбек" && <FeedbackPage />}
+        <Outlet />
       </main>
     </div>
   );
+}
+
+function OnboardingRoute() {
+  const navigate = useNavigate();
+
+  // Свіжозгенерований план передаємо через history state, щоб «Тиждень»
+  // намалював його одразу, не чекаючи на GET /plans
+  return (
+    <OnboardingPage
+      onComplete={(plan) => navigate("/week", { replace: true, state: { plan } })}
+    />
+  );
+}
+
+function WeekRoute() {
+  const location = useLocation();
+  const plan = (location.state as { plan?: PlanData } | null)?.plan ?? null;
+
+  return <WeekPlanPage initialPlan={plan} />;
 }
 
 export default App;

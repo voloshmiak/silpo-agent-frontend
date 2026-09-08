@@ -3,44 +3,12 @@ import { Card, Badge } from "@/shared/ui";
 import { DishRatingGroup, type RatingScore } from "@/features/rate-dish";
 import { FeedbackTagsSelector } from "@/features/select-feedback-tags";
 
-interface MealFeedbackItem {
+export interface MealFeedbackItem {
   id: string;
   title: string;
+  /** Скільки разів страва зустрічається в тижневому плані */
   cookedTimes: number;
-  timeMinutes: number;
-  initialRating?: RatingScore;
 }
-
-const mockFeedbackMeals: MealFeedbackItem[] = [
-  {
-    id: "f-1",
-    title: "Вівсянка на мигдалевому молоці з ягодами та чіа",
-    cookedTimes: 5,
-    timeMinutes: 10,
-    initialRating: "good",
-  },
-  {
-    id: "f-2",
-    title: "Куряче філе з булгуром та печеними овочами",
-    cookedTimes: 4,
-    timeMinutes: 35,
-    initialRating: "good",
-  },
-  {
-    id: "f-3",
-    title: "Сирники з вишневим соусом без цукру",
-    cookedTimes: 4,
-    timeMinutes: 25,
-    initialRating: "good",
-  },
-  {
-    id: "f-4",
-    title: "Форель запечена з броколі та лимоном",
-    cookedTimes: 2,
-    timeMinutes: 40,
-    initialRating: "bad",
-  },
-];
 
 const availableTagsList = [
   "Занадто складно готувати",
@@ -51,17 +19,14 @@ const availableTagsList = [
   "Хочу більше перекусів",
 ];
 
-export const DishRatingWidget: React.FC = () => {
-  const [ratings, setRatings] = useState<Record<string, RatingScore>>({
-    "f-1": "good",
-    "f-2": "good",
-    "f-3": "good",
-    "f-4": "bad",
-  });
+interface Props {
+  meals: MealFeedbackItem[];
+  weekLabel: string;
+}
 
-  const [selectedTags, setSelectedTags] = useState<string[]>([
-    "Занадто складно готувати",
-  ]);
+export const DishRatingWidget: React.FC<Props> = ({ meals, weekLabel }) => {
+  const [ratings, setRatings] = useState<Record<string, RatingScore>>({});
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
   const handleRatingChange = (id: string, score: RatingScore) => {
     setRatings((prev) => ({ ...prev, [id]: score }));
@@ -79,15 +44,15 @@ export const DishRatingWidget: React.FC = () => {
       <div>
         <div className="flex justify-between items-baseline mb-4">
           <h2 className="text-xs font-mono font-bold tracking-widest uppercase text-zinc-900">
-            Оцініть страви Тижня 12
+            Оцініть страви {weekLabel}
           </h2>
           <span className="text-xs font-mono text-zinc-500">
-            4 основні позиції
+            {meals.length} позицій
           </span>
         </div>
 
         <div className="space-y-2">
-          {mockFeedbackMeals.map((meal) => (
+          {meals.map((meal) => (
             <div
               key={meal.id}
               className="bg-[#DFDACB]/40 border border-[#D8D2C2] p-3.5 rounded-xl flex items-center justify-between gap-4"
@@ -95,7 +60,7 @@ export const DishRatingWidget: React.FC = () => {
               <div>
                 <h3 className="text-xs font-bold text-zinc-900">{meal.title}</h3>
                 <div className="text-[11px] font-mono text-zinc-500 mt-0.5">
-                  Готували {meal.cookedTimes} рази · {meal.timeMinutes} хв
+                  У плані {meal.cookedTimes}× на тиждень
                 </div>
               </div>
 

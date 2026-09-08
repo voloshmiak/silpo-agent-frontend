@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { createUser, getMe, getToken, updateMe, type UpdateMePayload } from "@/shared/api";
+import { clearToken, createUser, getMe, getToken } from "@/shared/api";
 import type { BackendUser } from "./types";
 
 export const useAuthUser = () => {
@@ -21,10 +21,9 @@ export const useAuthUser = () => {
     return created;
   }, []);
 
-  const updateProfile = useCallback(async (payload: UpdateMePayload) => {
-    const updated = await updateMe(payload);
-    setUser(updated);
-    return updated;
+  const logout = useCallback(() => {
+    clearToken();
+    setUser(null);
   }, []);
 
   return {
@@ -32,6 +31,6 @@ export const useAuthUser = () => {
     isLoading,
     isAuthenticated: Boolean(user),
     registerUser,
-    updateProfile,
+    logout,
   };
 };
