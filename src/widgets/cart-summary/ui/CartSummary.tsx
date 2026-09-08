@@ -38,6 +38,21 @@ export const CartSummary: React.FC<Props> = ({ cart, onOrderSuccess }) => {
 
       {/* Итоговый расчет и кнопка действия */}
       <div className="space-y-4 pt-4 border-t border-[#D8D2C2]">
+        {/* Разом — це сума до сплати разом із доставкою, тож товари й доставку
+            показуємо окремо, інакше підсумок не сходиться зі списком вище */}
+        <div className="space-y-1 text-xs font-mono text-zinc-500">
+          <div className="flex justify-between">
+            <span>Товари</span>
+            <span>{formatCurrency(cart.productsTotal)}</span>
+          </div>
+          {cart.deliveryPrice > 0 && (
+            <div className="flex justify-between">
+              <span>Доставка</span>
+              <span>{formatCurrency(cart.deliveryPrice)}</span>
+            </div>
+          )}
+        </div>
+
         <div className="flex justify-between items-end">
           <span className="text-xs uppercase font-mono text-zinc-500 font-bold">Разом</span>
           <span className="text-3xl font-mono font-black text-zinc-900">
@@ -47,7 +62,7 @@ export const CartSummary: React.FC<Props> = ({ cart, onOrderSuccess }) => {
 
         {cart.discountSaved > 0 && (
           <div className="bg-[#DFDACB]/60 p-2.5 rounded-lg flex items-center justify-between text-xs">
-            <Badge variant="orange">Акції</Badge>
+            <Badge variant="orange">Знижки</Badge>
             <span className="font-mono text-zinc-700">
               Заощаджено {cart.discountSaved.toFixed(2).replace(".", ",")} ₴
             </span>

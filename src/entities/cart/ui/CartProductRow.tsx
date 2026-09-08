@@ -9,6 +9,8 @@ interface Props {
 export const CartProductRow: React.FC<Props> = ({ product }) => {
   const [imageFailed, setImageFailed] = useState(false);
   const showImage = Boolean(product.imageUrl) && !imageFailed;
+  const showOldTotal =
+    product.oldTotal !== undefined && product.oldTotal > product.total;
 
   return (
     <div className="flex justify-between items-center py-2 text-xs gap-3">
@@ -42,17 +44,28 @@ export const CartProductRow: React.FC<Props> = ({ product }) => {
           )}
 
           <div className="text-[11px] text-zinc-500 mt-0.5">
-            {product.brand} · {product.weightVolume} · {product.count} шт
-            {product.discountPercent && (
+            {[product.brand, product.weightVolume, product.countLabel]
+              .filter(Boolean)
+              .join(" · ")}
+            {product.discountPercent ? (
               <span className="ml-1.5 bg-[#FF5C00] text-white text-[9px] font-bold px-1 py-0.2 rounded font-mono">
                 -{product.discountPercent}%
               </span>
-            )}
+            ) : null}
           </div>
         </div>
       </div>
-      <div className="font-mono font-bold text-zinc-900 shrink-0">
-        {formatCurrency(product.price)}
+      {/* Праворуч завжди сума позиції, а не ціна за одиницю: для 2 шт чи 0.75 кг
+          це різні числа, і саме сума сходиться з підсумком унизу кошика */}
+      <div className="text-right shrink-0 leading-tight">
+        {showOldTotal && (
+          <div className="font-mono text-[10px] text-zinc-400 line-through">
+            {formatCurrency(product.oldTotal!)}
+          </div>
+        )}
+        <div className="font-mono font-bold text-zinc-900">
+          {formatCurrency(product.total)}
+        </div>
       </div>
     </div>
   );

@@ -52,21 +52,31 @@ export interface PlanCartItem {
   product_id: string;
   quantity: number;
   unit: string;
+  /** Ціна за ОДНУ одиницю після знижок. Для позиції з кількох одиниць це не сума */
   price: number;
+  /** Сума всієї позиції після знижок — саме вона показується в рядку кошика */
   total_price: number;
   /** Поля картки товару «Сільпо» — відсутні в планах, збережених до оновлення контракту */
   slug?: string;
   url?: string;
   image_url?: string;
+  /** Знижки з розрахунку кошика — теж відсутні у старих планах */
+  old_price?: number;
+  discount_uah?: number;
 }
 
 export interface PlanSummary {
+  /** До сплати: товари зі знижками + доставка */
   total_uah: number;
   budget_uah: number;
   remaining_uah: number;
   restrictions: string[];
   promotions: string[];
   notes?: string;
+  /** Розклад суми — відсутній у планах, збережених до оновлення контракту */
+  products_total_uah?: number;
+  delivery_uah?: number;
+  discount_uah?: number;
 }
 
 export interface PlanData {
