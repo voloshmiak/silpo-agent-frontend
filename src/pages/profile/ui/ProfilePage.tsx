@@ -9,7 +9,17 @@ import {
 import { Button, Card, FieldLabel, TextInput } from "@/shared/ui";
 
 export const ProfilePage: React.FC = () => {
-  const { profile, updateProfile, saveChanges, resetChanges, isSaving } = useUserProfile();
+  const {
+    profile,
+    updateProfile,
+    saveChanges,
+    resetChanges,
+    isLoading: isLoadingSettings,
+    isSaving,
+    isSaved,
+    error: settingsError,
+    isDirty,
+  } = useUserProfile();
   const { user, isLoading, updateProfile: updateBackendProfile } = useAuthUser();
 
   const [name, setName] = useState("");
@@ -37,6 +47,15 @@ export const ProfilePage: React.FC = () => {
     updateProfile({ schedule });
   };
 
+  const handleRemoveAllergen = (allergen: string) => {
+    updateProfile({
+      dietaryRestrictions: {
+        ...profile.dietaryRestrictions,
+        allergens: profile.dietaryRestrictions.allergens.filter((a) => a !== allergen),
+      },
+    });
+  };
+
   const handleRemoveStopProduct = (product: string) => {
     updateProfile({
       dietaryRestrictions: {
@@ -52,6 +71,14 @@ export const ProfilePage: React.FC = () => {
     setSaveError(null);
     try {
       await updateBackendProfile({ name: name.trim(), height: Number(height), weight: Number(weight) });
+      // Вага та зріст дублюються в налаштуваннях — тримаємо їх синхронними
+      updateProfile({
+        physical: {
+          ...profile.physical,
+          heightCm: Number(height),
+          currentWeightKg: Number(weight),
+        },
+      });
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : "Не вдалося зберегти");
     } finally {
@@ -67,26 +94,37 @@ export const ProfilePage: React.FC = () => {
               Параметри та обмеження
             </h1>
             <p className="text-xs text-zinc-500 mt-1">
-              Зміни застосовуються до наступного тижневого плану
+              {isLoadingSettings
+                ? "Завантажуємо збережені параметри…"
+                : "Зміни застосовуються до наступного тижневого плану"}
             </p>
           </div>
 
           <div className="flex gap-3">
             <button
               onClick={resetChanges}
-              className="px-4 py-2 rounded-md border border-zinc-300 text-xs font-semibold uppercase tracking-wider hover:bg-zinc-200/50 transition cursor-pointer"
+              disabled={!isDirty || isSaving}
+              className="px-4 py-2 rounded-md border border-zinc-300 text-xs font-semibold uppercase tracking-wider hover:bg-zinc-200/50 transition cursor-pointer disabled:opacity-40 disabled:cursor-default"
             >
               Скинути
             </button>
             <button
               onClick={saveChanges}
-              disabled={isSaving}
+              disabled={isSaving || isLoadingSettings || !isDirty}
               className="px-4 py-2 rounded-md bg-[#D2F832] border border-black text-black text-xs font-bold uppercase tracking-wider hover:brightness-95 transition shadow-sm disabled:opacity-50 cursor-pointer"
             >
-              {isSaving ? "Збереження..." : "Зберегти зміни"}
+              {isSaving
+                ? "Збереження..."
+                : isSaved && !isDirty
+                  ? "✓ Збережено"
+                  : "Зберегти зміни"}
             </button>
           </div>
         </div>
+
+        {settingsError && (
+          <p className="text-xs text-[#FF5C00] font-semibold">{settingsError}</p>
+        )}
 
         <Card className="p-6">
           <h2 className="text-xs font-mono font-bold tracking-widest uppercase mb-4">
@@ -144,6 +182,7 @@ export const ProfilePage: React.FC = () => {
           />
           <DietaryCard
             data={profile.dietaryRestrictions}
+            onRemoveAllergen={handleRemoveAllergen}
             onRemoveStopProduct={handleRemoveStopProduct}
           />
           <BudgetCard

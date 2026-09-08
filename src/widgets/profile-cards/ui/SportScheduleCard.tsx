@@ -1,5 +1,12 @@
 import React from "react";
-import type { UserProfile } from "@/entities/user";
+import type { UserProfile, WorkoutType } from "@/entities/user";
+
+/** Клік по дню перемикає тип тренування по колу. */
+const NEXT_TYPE: Record<WorkoutType, WorkoutType> = {
+  "—": "СИЛОВІ",
+  "СИЛОВІ": "КАРДІО",
+  "КАРДІО": "—",
+};
 
 interface Props {
   schedule: UserProfile["schedule"];
@@ -9,6 +16,20 @@ interface Props {
 export const SportScheduleCard: React.FC<Props> = ({ schedule, onChange }) => {
   const toggleSkip = () => {
     onChange({ ...schedule, skipWorkoutToday: !schedule.skipWorkoutToday });
+  };
+
+  const cycleDay = (day: string) => {
+    const days = schedule.days.map((item) => {
+      if (item.day !== day) return item;
+      const type = NEXT_TYPE[item.type];
+      return { ...item, type, isActive: type !== "—" };
+    });
+    // workouts_per_week має збігатися з кількістю днів у розкладі
+    onChange({
+      ...schedule,
+      days,
+      weeklyWorkoutsCount: days.filter((item) => item.isActive).length,
+    });
   };
 
   return (
@@ -25,19 +46,22 @@ export const SportScheduleCard: React.FC<Props> = ({ schedule, onChange }) => {
 
         <div className="grid grid-cols-7 gap-1.5 mb-6">
           {schedule.days.map((item) => (
-            <div
+            <button
               key={item.day}
-              className={`flex flex-col items-center justify-center py-2.5 rounded-lg border select-none ${
+              type="button"
+              onClick={() => cycleDay(item.day)}
+              title="Змінити тип тренування"
+              className={`flex flex-col items-center justify-center py-2.5 rounded-lg border select-none cursor-pointer transition-colors ${
                 item.isActive
-                  ? "bg-[#DFDACB] border-zinc-500 text-zinc-900"
-                  : "border-[#D8D2C2] text-zinc-400 opacity-60"
+                  ? "bg-[#DFDACB] border-zinc-500 text-zinc-900 hover:border-black"
+                  : "border-[#D8D2C2] text-zinc-400 opacity-60 hover:opacity-100"
               }`}
             >
               <span className="text-xs font-mono font-bold">{item.day}</span>
               <span className="text-[8px] font-mono tracking-tighter mt-1">
                 {item.type}
               </span>
-            </div>
+            </button>
           ))}
         </div>
       </div>

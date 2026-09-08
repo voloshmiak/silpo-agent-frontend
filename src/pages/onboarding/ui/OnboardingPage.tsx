@@ -10,6 +10,8 @@ import { StepDiet } from "./steps/StepDiet";
 import { StepTraining } from "./steps/StepTraining";
 import { StepBudget } from "./steps/StepBudget";
 import { saveSilpoToken } from "@/shared/api/users";
+import { updateSettings } from "@/shared/api";
+import { defaultPaceForFocus, defaultScheduleMap } from "@/entities/user";
 
 interface Props {
   onComplete: (plan: PlanData) => void;
@@ -56,10 +58,31 @@ export const OnboardingPage: React.FC<Props> = ({ onComplete }) => {
         height: Number(data.heightCm) || 180,
       });
 
-      // 3. Зберігаємо токен Сільпо на бекенді (критично перед генерацією)
+      // 3. Зберігаємо параметри та обмеження — усі 4 блоки екрана профілю
+      await updateSettings({
+        weight: Number(data.currentWeightKg) || 75,
+        target_weight:
+          Number(data.targetWeightKg) || Number(data.currentWeightKg) || 75,
+        height: Number(data.heightCm) || 180,
+        age: Number(data.age) || 25,
+        sex: data.gender,
+        focus: data.focus,
+        weekly_pace: defaultPaceForFocus(data.focus),
+        workouts_per_week: data.weeklyWorkoutsCount,
+        workout_schedule: defaultScheduleMap(data.weeklyWorkoutsCount),
+        missed_workout_today: false,
+        allergens: data.allergens,
+        excluded_products: data.stopProducts,
+        diet_type: data.dietType,
+        weekly_budget: Number(data.budgetUah) || 2000,
+        promo_priority: "Високий",
+        delivery_included: true,
+      });
+
+      // 4. Зберігаємо токен Сільпо на бекенді (критично перед генерацією)
       await saveSilpoToken(DEFAULT_SILPO_TOKEN);
 
-      // 4. Запускаємо SSE-потік генерації плану
+      // 5. Запускаємо SSE-потік генерації плану
       const plan = await generate({
         budgetUah: Number(data.budgetUah) || 2000,
         workouts: data.weeklyWorkoutsCount ?? 3,

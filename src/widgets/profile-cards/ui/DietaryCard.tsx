@@ -3,10 +3,15 @@ import type { UserProfile } from "@/entities/user";
 
 interface Props {
   data: UserProfile["dietaryRestrictions"];
+  onRemoveAllergen?: (allergen: string) => void;
   onRemoveStopProduct?: (product: string) => void;
 }
 
-export const DietaryCard: React.FC<Props> = ({ data, onRemoveStopProduct }) => {
+export const DietaryCard: React.FC<Props> = ({
+  data,
+  onRemoveAllergen,
+  onRemoveStopProduct,
+}) => {
   return (
     <section className="bg-[#EBE7DC] border border-[#D8D2C2] rounded-xl p-6 space-y-4">
       <div className="flex justify-between items-baseline">
@@ -26,8 +31,15 @@ export const DietaryCard: React.FC<Props> = ({ data, onRemoveStopProduct }) => {
           {data.allergens.map((allergen) => (
             <span
               key={allergen}
-              className="bg-[#FF5C00] text-white text-xs font-bold px-3 py-1 rounded-full uppercase"
+              className="bg-[#FF5C00] text-white text-xs font-bold px-3 py-1 rounded-full uppercase flex items-center gap-1.5"
             >
+              <button
+                type="button"
+                onClick={() => onRemoveAllergen?.(allergen)}
+                className="text-white/70 hover:text-white text-[10px]"
+              >
+                ✕
+              </button>
               {allergen}
             </span>
           ))}

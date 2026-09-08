@@ -1,6 +1,9 @@
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { getSettings, getToken, updateSettings } from "@/shared/api";
 import type { UserProfile } from "./types";
+import { profileToSettings, settingsToProfile } from "./settingsMapper";
 
+/** Демо-дані, поки налаштування не завантажені (або користувач ще не зберігав їх). */
 export const initialProfileMock: UserProfile = {
   id: "usr_1",
   physical: {
@@ -11,14 +14,14 @@ export const initialProfileMock: UserProfile = {
     gender: "чол.",
     focus: "Схуднення",
     paceKgPerWeek: -0.6,
-    updatedAt: "2 дні тому",
+    updatedAt: "—",
   },
   schedule: {
     weeklyWorkoutsCount: 4,
     skipWorkoutToday: false,
     days: [
       { day: "ПН", type: "СИЛОВІ", isActive: true },
-      { day: "ВТ", type: "КАРДІО", isActive: false },
+      { day: "ВТ", type: "КАРДІО", isActive: true },
       { day: "СР", type: "—", isActive: false },
       { day: "ЧТ", type: "СИЛОВІ", isActive: true },
       { day: "ПТ", type: "—", isActive: false },
@@ -41,31 +44,66 @@ export const initialProfileMock: UserProfile = {
 
 export const useUserProfile = () => {
   const [profile, setProfile] = useState<UserProfile>(initialProfileMock);
+  /** Останній стан, підтверджений бекендом — до нього повертає «Скинути». */
+  const [baseline, setBaseline] = useState<UserProfile>(initialProfileMock);
+  const [isLoading, setIsLoading] = useState(() => Boolean(getToken()));
   const [isSaving, setIsSaving] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const updateProfile = (partial: Partial<UserProfile>) => {
+  useEffect(() => {
+    if (!getToken()) return;
+
+    getSettings()
+      .then((settings) => {
+        const loaded = settingsToProfile(settings, initialProfileMock);
+        setProfile(loaded);
+        setBaseline(loaded);
+      })
+      .catch(() => {
+        // налаштувань ще немає або бек недоступний — лишаємось на демо-даних
+      })
+      .finally(() => setIsLoading(false));
+  }, []);
+
+  const updateProfile = useCallback((partial: Partial<UserProfile>) => {
     setProfile((prev) => ({ ...prev, ...partial }));
-  };
+    setIsSaved(false);
+  }, []);
 
-  const saveChanges = async () => {
+  const saveChanges = useCallback(async () => {
     setIsSaving(true);
+    setError(null);
     try {
-      // Здесь в будущем будет: await api.updateProfile(profile)
-      console.log("Данные готовы для отправки на бэк:", profile);
+      const saved = await updateSettings(profileToSettings(profile));
+      const next = settingsToProfile(saved, initialProfileMock);
+      setProfile(next);
+      setBaseline(next);
+      setIsSaved(true);
+      return next;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Не вдалося зберегти налаштування");
+      return null;
     } finally {
       setIsSaving(false);
     }
-  };
+  }, [profile]);
 
-  const resetChanges = () => {
-    setProfile(initialProfileMock);
-  };
+  const resetChanges = useCallback(() => {
+    setProfile(baseline);
+    setError(null);
+    setIsSaved(false);
+  }, [baseline]);
 
   return {
     profile,
     updateProfile,
     saveChanges,
     resetChanges,
+    isLoading,
     isSaving,
+    isSaved,
+    error,
+    isDirty: JSON.stringify(profile) !== JSON.stringify(baseline),
   };
 };
