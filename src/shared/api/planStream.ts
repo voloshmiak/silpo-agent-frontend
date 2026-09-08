@@ -53,6 +53,10 @@ export interface PlanCartItem {
   unit: string;
   price: number;
   total_price: number;
+  /** Поля картки товару «Сільпо» — відсутні в планах, збережених до оновлення контракту */
+  slug?: string;
+  url?: string;
+  image_url?: string;
 }
 
 export interface PlanSummary {

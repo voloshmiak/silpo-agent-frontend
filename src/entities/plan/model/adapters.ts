@@ -83,6 +83,8 @@ export function planToCartData(plan: PlanData): CartData {
       weightVolume: item.unit ?? "",
       count: item.quantity,
       price: item.price,
+      imageUrl: item.image_url,
+      url: item.url,
     })),
     totalPrice: plan.summary.total_uah,
     discountSaved: 0,

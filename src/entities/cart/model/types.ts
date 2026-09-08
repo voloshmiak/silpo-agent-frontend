@@ -6,6 +6,10 @@ export interface CartProduct {
   count: number;
   price: number;
   discountPercent?: number;
+  /** Прев'ю товару з каталогу «Сільпо» */
+  imageUrl?: string;
+  /** Посилання на картку товару на silpo.ua */
+  url?: string;
 }
 
 export interface CartData {
