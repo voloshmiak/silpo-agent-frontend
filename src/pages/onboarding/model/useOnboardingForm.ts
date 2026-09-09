@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { countWorkouts, scheduleFromMap, type WorkoutScheduleItem } from "@/entities/user";
+import { isStepValid } from "./validation";
+export { isStepValid } from "./validation";
 
 export interface OnboardingFormData {
   name: string;
@@ -46,25 +48,6 @@ const initialData: OnboardingFormData = {
   silpoAccessToken: "",
   silpoRefreshToken: "",
 };
-
-export function isStepValid(step: number, data: OnboardingFormData): boolean {
-  switch (step) {
-    case 0:
-      return data.name.trim().length > 0 && data.targetWeightKg !== "";
-    case 1:
-      return data.heightCm !== "" && data.currentWeightKg !== "" && data.age !== "";
-    case 2:
-      return true;
-    case 3:
-      return true;
-    case 4:
-      return data.budgetUah !== "" && Number(data.budgetUah) > 0;
-    case 5:
-      return data.silpoAccessToken.trim().length > 0;
-    default:
-      return false;
-  }
-}
 
 export function workoutsPerWeek(data: OnboardingFormData): number {
   return countWorkouts(data.workoutDays);

@@ -3,6 +3,7 @@ import { cn } from "@/shared/lib/utils";
 
 const fieldBase =
   "w-full h-11 px-3 rounded-lg border border-[#D8D2C2] bg-[#E5E0D3]/40 text-sm text-zinc-900 placeholder:text-zinc-400 outline-none focus:border-zinc-500 transition-colors";
+const fieldInvalid = "border-[#FF5C00] focus:border-[#FF5C00]";
 
 export const FieldLabel: React.FC<React.PropsWithChildren<{ hint?: string }>> = ({
   children,
@@ -18,8 +19,15 @@ export const FieldLabel: React.FC<React.PropsWithChildren<{ hint?: string }>> = 
 
 export const TextInput: React.FC<React.InputHTMLAttributes<HTMLInputElement>> = ({
   className,
+  "aria-invalid": ariaInvalid,
   ...props
-}) => <input className={cn(fieldBase, className)} {...props} />;
+}) => (
+  <input
+    className={cn(fieldBase, ariaInvalid && fieldInvalid, className)}
+    aria-invalid={ariaInvalid}
+    {...props}
+  />
+);
 
 export const TextArea: React.FC<React.TextareaHTMLAttributes<HTMLTextAreaElement>> = ({
   className,
