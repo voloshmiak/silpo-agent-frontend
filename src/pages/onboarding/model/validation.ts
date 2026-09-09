@@ -22,6 +22,22 @@ export function isValidBudget(budget: number | ""): boolean {
   return budget !== "" && Number.isFinite(budget) && budget >= MIN_WEEKLY_BUDGET;
 }
 
+function getWeightGoalError(data: OnboardingFormData): string | undefined {
+  if (!isValidWeight(data.targetWeightKg) || !isValidWeight(data.currentWeightKg)) {
+    return undefined;
+  }
+
+  if (data.focus === "Схуднення" && data.targetWeightKg >= data.currentWeightKg) {
+    return "Для схуднення цільова вага має бути меншою за поточну";
+  }
+
+  if (data.focus === "Набір маси" && data.targetWeightKg <= data.currentWeightKg) {
+    return "Для набору маси цільова вага має бути більшою за поточну";
+  }
+
+  return undefined;
+}
+
 export function getFieldError(
   field: keyof OnboardingFormData,
   data: OnboardingFormData
@@ -32,17 +48,19 @@ export function getFieldError(
       if (/\d/.test(data.name)) return "Ім'я не може містити цифри";
       return undefined;
     case "targetWeightKg":
-      return isValidWeight(data.targetWeightKg)
-        ? undefined
-        : `Вага має бути від ${WEIGHT_RANGE.min} до ${WEIGHT_RANGE.max} кг`;
+      if (!isValidWeight(data.targetWeightKg)) {
+        return `Вага має бути від ${WEIGHT_RANGE.min} до ${WEIGHT_RANGE.max} кг`;
+      }
+      return getWeightGoalError(data);
     case "heightCm":
       return isInRange(data.heightCm, HEIGHT_RANGE)
         ? undefined
         : `Зріст має бути від ${HEIGHT_RANGE.min} до ${HEIGHT_RANGE.max} см`;
     case "currentWeightKg":
-      return isValidWeight(data.currentWeightKg)
-        ? undefined
-        : `Вага має бути від ${WEIGHT_RANGE.min} до ${WEIGHT_RANGE.max} кг`;
+      if (!isValidWeight(data.currentWeightKg)) {
+        return `Вага має бути від ${WEIGHT_RANGE.min} до ${WEIGHT_RANGE.max} кг`;
+      }
+      return getWeightGoalError(data);
     case "age":
       return isInRange(data.age, AGE_RANGE)
         ? undefined

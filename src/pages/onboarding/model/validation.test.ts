@@ -20,4 +20,30 @@ describe("Onboarding Validation", () => {
       } as Parameters<typeof getFieldError>[1])
     ).toBe("Ім'я не може містити цифри");
   });
+
+  it("requires a lower target weight when losing weight", () => {
+    const data = {
+      name: "Іван",
+      focus: "Схуднення",
+      targetWeightKg: 80,
+      currentWeightKg: 75,
+    } as Parameters<typeof getFieldError>[1];
+
+    expect(getFieldError("currentWeightKg", data)).toBe(
+      "Для схуднення цільова вага має бути меншою за поточну"
+    );
+  });
+
+  it("requires a higher target weight when gaining weight", () => {
+    const data = {
+      name: "Іван",
+      focus: "Набір маси",
+      targetWeightKg: 75,
+      currentWeightKg: 80,
+    } as Parameters<typeof getFieldError>[1];
+
+    expect(getFieldError("currentWeightKg", data)).toBe(
+      "Для набору маси цільова вага має бути більшою за поточну"
+    );
+  });
 });
