@@ -28,7 +28,7 @@ export const CartSummary: React.FC<Props> = ({ cart }) => {
         </div>
 
         {/* Список товаров */}
-        <div className="min-h-0 flex-1 overflow-y-auto pr-1 space-y-1 divide-y divide-[#D8D2C2]/60">
+        <div className="min-h-0 flex-1 overflow-y-auto pr-1 space-y-1 divide-y divide-[#D8D2C2]/60 border border-[#D8D2C2] rounded-lg p-2 shadow-inner">
           {cart.items.map((item) => (
             <CartProductRow key={item.id} product={item} />
           ))}

@@ -78,7 +78,10 @@ export function settingsToProfile(settings: UserSettings): UserProfile {
 export function profileToSettings(profile: UserProfile): UserSettingsPayload {
   return {
     weight: profile.physical.currentWeightKg,
-    target_weight: profile.physical.targetWeightKg,
+    target_weight:
+      profile.physical.focus === "Підтримка форми"
+        ? profile.physical.currentWeightKg
+        : profile.physical.targetWeightKg,
     height: profile.physical.heightCm,
     age: profile.physical.age,
     sex: profile.physical.gender,

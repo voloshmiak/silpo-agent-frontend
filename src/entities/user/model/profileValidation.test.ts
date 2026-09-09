@@ -48,4 +48,22 @@ describe("Profile physical validation", () => {
       "Для набору маси цільова вага має бути більшою за поточну"
     );
   });
+
+  it("validates pace according to the selected focus", () => {
+    expect(
+      getPhysicalFieldError("paceKgPerWeek", physical({ paceKgPerWeek: -0.2 }))
+    ).toBeUndefined();
+    expect(
+      getPhysicalFieldError(
+        "paceKgPerWeek",
+        physical({ focus: "Набір маси", paceKgPerWeek: 0 })
+      )
+    ).toContain("від 0.1 до 1.5");
+    expect(
+      getPhysicalFieldError(
+        "paceKgPerWeek",
+        physical({ focus: "Підтримка форми", paceKgPerWeek: 0.2 })
+      )
+    ).toBe("Для підтримання форми темп має бути 0 кг/тиж");
+  });
 });

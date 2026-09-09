@@ -3,7 +3,9 @@ import {
   getPhysicalFieldError,
   PROFILE_AGE_RANGE,
   PROFILE_HEIGHT_RANGE,
+  PROFILE_PACE_RANGE,
   PROFILE_WEIGHT_RANGE,
+  defaultPaceForFocus,
   type UserProfile,
 } from "@/entities/user";
 
@@ -46,17 +48,19 @@ export const PhysicalDataCard: React.FC<Props> = ({ data, onChange }) => {
           error={getPhysicalFieldError("currentWeightKg", data)}
           onChange={(v) => set("currentWeightKg", v)}
         />
-        <NumberRow
-          label="Цільова вага"
-          unit="кг"
-          step={0.1}
-          min={PROFILE_WEIGHT_RANGE.min}
-          max={PROFILE_WEIGHT_RANGE.max}
-          accent
-          value={data.targetWeightKg}
-          error={getPhysicalFieldError("targetWeightKg", data)}
-          onChange={(v) => set("targetWeightKg", v)}
-        />
+        {data.focus !== "Підтримка форми" && (
+          <NumberRow
+            label="Цільова вага"
+            unit="кг"
+            step={0.1}
+            min={PROFILE_WEIGHT_RANGE.min}
+            max={PROFILE_WEIGHT_RANGE.max}
+            accent
+            value={data.targetWeightKg}
+            error={getPhysicalFieldError("targetWeightKg", data)}
+            onChange={(v) => set("targetWeightKg", v)}
+          />
+        )}
         <NumberRow
           label="Зріст"
           unit="см"
@@ -105,7 +109,22 @@ export const PhysicalDataCard: React.FC<Props> = ({ data, onChange }) => {
           label="Темп"
           unit="кг/тиж"
           step={0.1}
+          min={
+            data.focus === "Підтримка форми"
+              ? 0
+              : data.focus === "Схуднення"
+                ? -PROFILE_PACE_RANGE.max
+                : PROFILE_PACE_RANGE.min
+          }
+          max={
+            data.focus === "Підтримка форми"
+              ? 0
+              : data.focus === "Схуднення"
+                ? -PROFILE_PACE_RANGE.min
+                : PROFILE_PACE_RANGE.max
+          }
           value={data.paceKgPerWeek}
+          error={getPhysicalFieldError("paceKgPerWeek", data)}
           onChange={(v) => set("paceKgPerWeek", v)}
         />
 
@@ -116,7 +135,17 @@ export const PhysicalDataCard: React.FC<Props> = ({ data, onChange }) => {
               <button
                 key={option.value}
                 type="button"
-                onClick={() => set("focus", option.value)}
+                onClick={() =>
+                  onChange({
+                    ...data,
+                    focus: option.value,
+                    targetWeightKg:
+                      option.value === "Підтримка форми"
+                        ? data.currentWeightKg
+                        : data.targetWeightKg,
+                    paceKgPerWeek: defaultPaceForFocus(option.value),
+                  })
+                }
                 className={`px-2 h-7 rounded-md border text-[11px] font-mono font-bold transition-colors cursor-pointer ${
                   data.focus === option.value
                     ? "bg-[#D2F832] border-black text-black"
