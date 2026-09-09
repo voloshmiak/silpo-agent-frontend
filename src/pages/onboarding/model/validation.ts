@@ -63,7 +63,8 @@ export function getVisibleFieldError(
   data: OnboardingFormData
 ): string | undefined {
   const value = data[field];
-  const hasValue = typeof value === "string" ? value.trim().length > 0 : value !== "";
+  const hasValue =
+    typeof value === "string" ? value.trim().length > 0 : typeof value === "number";
 
   return hasValue ? getFieldError(field, data) : undefined;
 }

@@ -184,10 +184,7 @@ export const WeekPlanPage: React.FC<Props> = ({ initialPlan }) => {
           </div>
 
           <div className="lg:col-span-1">
-            <CartSummary
-              cart={cart}
-              onOrderSuccess={() => console.log("Замовлення успішно відправлено!")}
-            />
+            <CartSummary cart={cart} />
           </div>
         </div>
       )}
