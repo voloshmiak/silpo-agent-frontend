@@ -5,7 +5,7 @@ interface Props {
   totalPrice: number;
 }
 
-const SILPO_URL = "https://silpo.ua/";
+const SILPO_URL = "https://silpo.ua/basket";
 
 export const OrderCartButton: React.FC<Props> = ({ totalPrice }) => {
   const handleOrder = () => {
