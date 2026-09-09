@@ -15,7 +15,6 @@ import {
   type PlanData,
 } from "@/entities/plan";
 import { PlanGenerationLoader, usePlanGeneration } from "@/features/generate-plan";
-import { formatCurrency } from "@/shared/lib";
 import { WeekPlanSkeleton } from "./WeekPlanSkeleton";
 
 interface Props {
@@ -156,7 +155,6 @@ export const WeekPlanPage: React.FC<Props> = ({ initialPlan }) => {
         activeDay={activeDay}
         onDayChange={setSelectedDay}
         subtitle={subtitle}
-        onRefreshClick={() => alert("Залишки оновлено")}
         onRegenerate={handleRegenerate}
         isRegenerating={isRegenerating}
       />
@@ -207,14 +205,10 @@ const PlanNotes: React.FC<{ plan: PlanData }> = ({ plan }) => {
 
   return (
     <Card className="p-6 space-y-3">
-      <div className="flex justify-between items-baseline">
+      <div>
         <h2 className="text-xs font-mono font-bold tracking-widest uppercase">
           Коментар агента
         </h2>
-        <span className="text-[11px] font-mono text-zinc-500">
-          {formatCurrency(summary.total_uah)} з {formatCurrency(summary.budget_uah)} · лишилось{" "}
-          {formatCurrency(summary.remaining_uah)}
-        </span>
       </div>
 
       {summary.notes && (

@@ -16,7 +16,6 @@ interface Props {
   onDayChange: (key: string) => void;
   title?: string;
   subtitle?: string;
-  onRefreshClick?: () => void;
   onRegenerate?: (reason: string) => void;
   isRegenerating?: boolean;
 }
@@ -28,7 +27,6 @@ export const WeeklyMacros: React.FC<Props> = ({
   onDayChange,
   title = "Тиждень",
   subtitle,
-  onRefreshClick,
   onRegenerate,
   isRegenerating,
 }) => {
@@ -83,9 +81,6 @@ export const WeeklyMacros: React.FC<Props> = ({
         </div>
 
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={onRefreshClick}>
-            ↻ Оновити залишки
-          </Button>
           <Button
             variant="outline"
             size="sm"
