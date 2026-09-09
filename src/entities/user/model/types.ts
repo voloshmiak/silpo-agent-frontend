@@ -1,3 +1,5 @@
+import type { DietType, PromoPriority } from "./vocabulary";
+
 export interface BackendUser {
   id: string;
   name: string;
@@ -33,14 +35,14 @@ export interface UserProfile {
     weeklyWorkoutsCount: number;
   };
   dietaryRestrictions: {
+    /** Довільні значення, не лише пресети: алергія може бути будь-яка */
     allergens: string[];
     stopProducts: string[];
-    dietType: string;
+    dietType: DietType;
   };
   budget: {
     weeklyLimit: number;
-    averageSpent8Weeks: number;
-    promotionsPriority: "Високий" | "Середній" | "Низький";
+    promotionsPriority: PromoPriority;
     deliveryIncluded: boolean;
   };
 }

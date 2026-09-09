@@ -2,6 +2,18 @@ import React, { useState } from "react";
 import { Card, Badge, Button } from "@/shared/ui";
 import { mockWeightHistory, mockBudgetHistory } from "@/entities/metric";
 
+/**
+ * Обидва графіки цього віджета намальовані на вигаданих числах: історії ваги
+ * та витрат бекенд поки не зберігає. Позначка стоїть на кожній картці, щоб
+ * ніхто не звіряв із ними реальний прогрес — прибрати її можна тоді ж, коли
+ * зʼявиться API.
+ */
+const DemoMark: React.FC = () => (
+  <span className="text-[9px] font-mono font-bold uppercase tracking-wider text-[#FF5C00] border border-[#FF5C00]/50 rounded px-1.5 py-0.5">
+    Демо
+  </span>
+);
+
 export const ArchiveAnalytics: React.FC = () => {
   const [period, setPeriod] = useState<"4" | "12" | "all">("12");
 
@@ -35,8 +47,8 @@ export const ArchiveAnalytics: React.FC = () => {
           <h1 className="text-3xl font-black font-mono tracking-tight uppercase text-zinc-900">
             Архів та Прогрес
           </h1>
-          <p className="text-xs text-zinc-500 font-mono mt-0.5">
-            12 тижнів на системі · мета: 75 кг до кінця жовтня
+          <p className="text-xs text-[#FF5C00] font-mono font-bold mt-1">
+            Обидва графіки — демонстраційні: історію ваги й витрат бекенд поки не зберігає
           </p>
         </div>
 
@@ -70,8 +82,9 @@ export const ArchiveAnalytics: React.FC = () => {
           <div>
             <div className="flex justify-between items-start">
               <div>
-                <span className="text-[10px] font-mono uppercase text-zinc-500 font-bold tracking-wider">
+                <span className="text-[10px] font-mono uppercase text-zinc-500 font-bold tracking-wider flex items-center gap-2">
                   Динаміка ваги
+                  <DemoMark />
                 </span>
                 <div className="flex items-baseline gap-2 mt-1">
                   <span className="text-3xl font-mono font-black text-zinc-900">
@@ -141,8 +154,9 @@ export const ArchiveAnalytics: React.FC = () => {
           <div>
             <div className="flex justify-between items-start">
               <div>
-                <span className="text-[10px] font-mono uppercase text-zinc-500 font-bold tracking-wider">
+                <span className="text-[10px] font-mono uppercase text-zinc-500 font-bold tracking-wider flex items-center gap-2">
                   Витрати на їжу по тижнях
+                  <DemoMark />
                 </span>
                 <div className="flex items-baseline gap-2 mt-1">
                   <span className="text-3xl font-mono font-black text-zinc-900">

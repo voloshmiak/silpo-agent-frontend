@@ -1,8 +1,9 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo } from "react";
 import { DishRatingWidget, type MealFeedbackItem } from "@/widgets/dish-rating-widget";
 import { AgentDecisionWidget } from "@/widgets/agent-decision-widget";
-import { Card } from "@/shared/ui";
-import { getPlans, getToken, PLAN_MEAL_SLOTS, type PlanRecord } from "@/shared/api";
+import { Card, PageError } from "@/shared/ui";
+import { useLoadedData } from "@/shared/lib";
+import { getPlans, PLAN_MEAL_SLOTS, type PlanRecord } from "@/shared/api";
 import { parsePlanContent, type PlanData } from "@/entities/plan";
 import { FeedbackSkeleton } from "./FeedbackSkeleton";
 
@@ -39,29 +40,28 @@ function weekLabel(record: PlanRecord | null): string {
 }
 
 export const FeedbackPage: React.FC = () => {
-  const [record, setRecord] = useState<PlanRecord | null>(null);
-  const [plan, setPlan] = useState<PlanData | null>(null);
-  const [isLoading, setIsLoading] = useState(() => Boolean(getToken()));
+  const {
+    data: record,
+    isLoading,
+    error,
+    reload,
+  } = useLoadedData<PlanRecord | null>(async () => (await getPlans(1, 0))[0] ?? null);
 
-  useEffect(() => {
-    if (!getToken()) return;
-
-    getPlans(1, 0)
-      .then(([latest]) => {
-        if (!latest) return;
-        setRecord(latest);
-        setPlan(parsePlanContent(latest.content));
-      })
-      .catch(() => {
-        // плану немає або бек недоступний — покажемо порожній стан
-      })
-      .finally(() => setIsLoading(false));
-  }, []);
-
+  const plan: PlanData | null = useMemo(
+    () => (record ? parsePlanContent(record.content) : null),
+    [record]
+  );
   const meals = useMemo(() => (plan ? collectMeals(plan) : []), [plan]);
 
-  if (isLoading) {
-    return <FeedbackSkeleton />;
+  // «Плану ще немає» — це порожній стан нижче, а не помилка. Сюди веде тільки
+  // збій запиту, і тоді сторінка лишається скелетоном із причиною знизу.
+  if (isLoading || error) {
+    return (
+      <>
+        <FeedbackSkeleton />
+        {error && <PageError message={error} onRetry={reload} />}
+      </>
+    );
   }
 
   return (

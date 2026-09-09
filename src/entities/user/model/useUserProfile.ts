@@ -1,78 +1,58 @@
 import { useCallback, useEffect, useState } from "react";
-import { getSettings, getToken, updateSettings } from "@/shared/api";
+import { getSettings, updateSettings } from "@/shared/api";
 import type { UserProfile } from "./types";
 import { profileToSettings, settingsToProfile } from "./settingsMapper";
 
-/**
- * Стартові значення для користувача, який ще не зберігав налаштувань.
- * Це НЕ плейсхолдер завантаження: доки триває запит, profile === null і
- * сторінка показує скелетон, щоб не блимати чужими цифрами.
- */
-export const initialProfileMock: UserProfile = {
-  id: "usr_1",
-  physical: {
-    currentWeightKg: 78.4,
-    targetWeightKg: 72.5,
-    heightCm: 182,
-    age: 29,
-    gender: "чол.",
-    focus: "Схуднення",
-    paceKgPerWeek: -0.6,
-    updatedAt: "—",
-  },
-  schedule: {
-    weeklyWorkoutsCount: 4,
-    skipWorkoutToday: false,
-    days: [
-      { day: "ПН", type: "СИЛОВІ", isActive: true },
-      { day: "ВТ", type: "КАРДІО", isActive: true },
-      { day: "СР", type: "—", isActive: false },
-      { day: "ЧТ", type: "СИЛОВІ", isActive: true },
-      { day: "ПТ", type: "—", isActive: false },
-      { day: "СБ", type: "СИЛОВІ", isActive: true },
-      { day: "НД", type: "—", isActive: false },
-    ],
-  },
-  dietaryRestrictions: {
-    allergens: ["Лактоза", "Горіхи"],
-    stopProducts: ["Гриби", "Кінза", "Печінка"],
-    dietType: "Без обмежень",
-  },
-  budget: {
-    weeklyLimit: 2000,
-    averageSpent8Weeks: 1933,
-    promotionsPriority: "Високий",
-    deliveryIncluded: true,
-  },
-};
+const LOAD_ERROR = "Не вдалося завантажити параметри. Перевірте зʼєднання та спробуйте ще раз.";
 
+/**
+ * Налаштування користувача: завантаження, локальне редагування, збереження.
+ *
+ * Поки запит не повернувся або впав, `profile` лишається `null` — підставляти
+ * замість нього демо-профіль не можна. Ці цифри формують раціон і кошик, тож
+ * чужі 78 кг і чужі алергени стали б справжніми налаштуваннями людини, яка
+ * просто натиснула «Зберегти зміни» на екрані, що виглядав заповненим.
+ */
 export const useUserProfile = () => {
-  const [profile, setProfile] = useState<UserProfile | null>(() =>
-    getToken() ? null : initialProfileMock
-  );
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   /** Останній стан, підтверджений бекендом — до нього повертає «Скинути». */
-  const [baseline, setBaseline] = useState<UserProfile | null>(profile);
-  const [isLoading, setIsLoading] = useState(() => Boolean(getToken()));
+  const [baseline, setBaseline] = useState<UserProfile | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  /** Лічильник спроб — єдина залежність ефекту, тож перезапит керований. */
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
-    if (!getToken()) return;
+    let cancelled = false;
 
     getSettings()
       .then((settings) => {
-        const loaded = settingsToProfile(settings, initialProfileMock);
+        if (cancelled) return;
+        const loaded = settingsToProfile(settings);
         setProfile(loaded);
         setBaseline(loaded);
       })
-      .catch(() => {
-        // налаштувань ще немає або бек недоступний — даємо порожню форму,
-        // яку користувач заповнить і збереже сам
-        setProfile(initialProfileMock);
-        setBaseline(initialProfileMock);
+      .catch((err: unknown) => {
+        if (cancelled) return;
+        setProfile(null);
+        setBaseline(null);
+        setError(err instanceof Error ? err.message : LOAD_ERROR);
       })
-      .finally(() => setIsLoading(false));
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [attempt]);
+
+  const reload = useCallback(() => {
+    setIsLoading(true);
+    setError(null);
+    setAttempt((value) => value + 1);
   }, []);
 
   const updateProfile = useCallback((partial: Partial<UserProfile>) => {
@@ -82,11 +62,12 @@ export const useUserProfile = () => {
 
   const saveChanges = useCallback(async () => {
     if (!profile) return null;
+
     setIsSaving(true);
     setError(null);
     try {
       const saved = await updateSettings(profileToSettings(profile));
-      const next = settingsToProfile(saved, initialProfileMock);
+      const next = settingsToProfile(saved);
       setProfile(next);
       setBaseline(next);
       setIsSaved(true);
@@ -110,6 +91,7 @@ export const useUserProfile = () => {
     updateProfile,
     saveChanges,
     resetChanges,
+    reload,
     isLoading,
     isSaving,
     isSaved,

@@ -1,5 +1,10 @@
 import { useState } from "react";
-import { countWorkouts, scheduleFromMap, type WorkoutScheduleItem } from "@/entities/user";
+import {
+  countWorkouts,
+  scheduleFromMap,
+  type DietType,
+  type WorkoutScheduleItem,
+} from "@/entities/user";
 import { isStepValid } from "./validation";
 export { isStepValid } from "./validation";
 
@@ -11,7 +16,7 @@ export interface OnboardingFormData {
   currentWeightKg: number | "";
   age: number | "";
   gender: "чол." | "жін.";
-  dietType: string;
+  dietType: DietType;
   allergens: string[];
   stopProducts: string[];
   note: string;

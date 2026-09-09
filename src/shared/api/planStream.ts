@@ -1,14 +1,21 @@
 import { API_BASE_URL, getToken } from "./base";
 import { getPlans } from "./plans";
 
+/**
+ * Аргументи одного прогону — і тільки вони.
+ *
+ * Профіль, бюджет, тренування та обмеження бекенд читає з `user_settings`;
+ * перебити їх параметрами запиту більше не можна. Раніше екран надсилав свою
+ * копію профілю і міг розійтися з базою — половина цифр їхала з форми,
+ * половина з БД. Щоб план порахувався по-новому, спершу зберігаємо зміни
+ * через `PUT /users/me/settings`, і аж тоді генеруємо.
+ */
 export interface PlanStreamParams {
-  budgetUah: number;
-  workouts?: number;
-  sex?: "male" | "female";
-  age?: number;
+  /** Вільний текст користувача. Дієта, алергени й стоп-продукти сюди не пишуться — вони в налаштуваннях */
   note?: string;
+  /** Продукти, які вже є вдома, через кому — вони не купуються */
   fridge?: string;
-  targetWeight?: number;
+  /** Минулий план, який агент адаптує замість генерації з нуля */
   planId?: string;
 }
 
@@ -225,15 +232,11 @@ async function recoverSavedPlan(baseline: Promise<string | null>): Promise<PlanD
   }
 }
 
+/** Порожній рядок, коли передавати нічого — тоді й `?` в URL не з'явиться. */
 function buildQuery(params: PlanStreamParams): string {
   const search = new URLSearchParams();
-  search.set("budget_uah", String(params.budgetUah));
-  if (params.workouts !== undefined) search.set("workouts", String(params.workouts));
-  if (params.sex) search.set("sex", params.sex);
-  if (params.age !== undefined) search.set("age", String(params.age));
   if (params.note) search.set("note", params.note);
   if (params.fridge) search.set("fridge", params.fridge);
-  if (params.targetWeight !== undefined) search.set("target_weight", String(params.targetWeight));
   if (params.planId) search.set("plan_id", params.planId);
   return search.toString();
 }
@@ -248,7 +251,7 @@ function buildQuery(params: PlanStreamParams): string {
  * still sends the retired `token` events keeps working.
  */
 export async function streamPlan(
-  params: PlanStreamParams,
+  params: PlanStreamParams = {},
   handlers: StreamPlanHandlers = {}
 ): Promise<PlanData> {
   const token = getToken();
@@ -284,7 +287,8 @@ export async function streamPlan(
 
   try {
     armStallTimer();
-    const response = await fetch(`${API_BASE_URL}/plan/stream?${buildQuery(params)}`, {
+    const query = buildQuery(params);
+    const response = await fetch(`${API_BASE_URL}/plan/stream${query ? `?${query}` : ""}`, {
       headers: {
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },

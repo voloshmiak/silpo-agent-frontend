@@ -5,4 +5,5 @@ export * from "./checkbox";
 export * from "./progress";
 export * from "./switch";
 export * from "./form-fields";
+export * from "./page-error";
 export * from "./simple-markdown";

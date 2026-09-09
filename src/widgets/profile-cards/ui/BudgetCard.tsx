@@ -1,12 +1,18 @@
 import React from "react";
-import type { UserProfile } from "@/entities/user";
+import { PROMO_PRIORITY_OPTIONS, type UserProfile } from "@/entities/user";
+import { PillSelect, Switch } from "@/shared/ui";
 
 interface Props {
   budget: UserProfile["budget"];
-  onChangeLimit: (newLimit: number) => void;
+  onChange: (budget: UserProfile["budget"]) => void;
 }
 
-export const BudgetCard: React.FC<Props> = ({ budget, onChangeLimit }) => {
+export const BudgetCard: React.FC<Props> = ({ budget, onChange }) => {
+  const set = <K extends keyof UserProfile["budget"]>(
+    key: K,
+    value: UserProfile["budget"][K]
+  ) => onChange({ ...budget, [key]: value });
+
   return (
     <section className="bg-[#EBE7DC] border border-[#D8D2C2] rounded-xl p-6 flex flex-col justify-between">
       <div>
@@ -29,7 +35,8 @@ export const BudgetCard: React.FC<Props> = ({ budget, onChangeLimit }) => {
           max="3500"
           step="50"
           value={budget.weeklyLimit}
-          onChange={(e) => onChangeLimit(Number(e.target.value))}
+          onChange={(e) => set("weeklyLimit", Number(e.target.value))}
+          aria-label="Ліміт витрат на тиждень"
           className="w-full h-2 bg-zinc-300 rounded-lg appearance-none cursor-pointer accent-[#D2F832]"
         />
         <div className="flex justify-between text-[10px] font-mono text-zinc-400 mt-1">
@@ -38,16 +45,31 @@ export const BudgetCard: React.FC<Props> = ({ budget, onChangeLimit }) => {
         </div>
       </div>
 
-      <div className="space-y-2 pt-4 border-t border-[#DFDACB] text-xs">
-        <div className="flex justify-between">
-          <span className="text-zinc-500">Пріоритет акцій Сільпо</span>
-          <span className="font-semibold text-[#FF5C00]">{budget.promotionsPriority}</span>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-zinc-500">Доставка</span>
-          <span className="font-semibold text-zinc-800">
-            {budget.deliveryIncluded ? "Включена в бюджет" : "Не включена"}
+      <div className="space-y-3 pt-4 mt-4 border-t border-[#DFDACB] text-xs">
+        <div>
+          <span className="text-[10px] font-mono uppercase text-zinc-500 block mb-2">
+            Пріоритет акцій Сільпо
           </span>
+          <PillSelect
+            options={PROMO_PRIORITY_OPTIONS}
+            value={budget.promotionsPriority}
+            onChange={(promotionsPriority) => set("promotionsPriority", promotionsPriority)}
+          />
+        </div>
+
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className="text-xs font-bold text-zinc-800">Доставка в бюджеті</p>
+            <p className="text-[11px] text-zinc-500">
+              {budget.deliveryIncluded
+                ? "Ліміт враховує вартість доставки"
+                : "Ліміт рахується лише за продукти"}
+            </p>
+          </div>
+          <Switch
+            checked={budget.deliveryIncluded}
+            onCheckedChange={(deliveryIncluded) => set("deliveryIncluded", deliveryIncluded)}
+          />
         </div>
       </div>
     </section>

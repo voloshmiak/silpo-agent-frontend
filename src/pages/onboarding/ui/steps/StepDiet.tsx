@@ -1,20 +1,12 @@
 import React from "react";
 import type { OnboardingFormData } from "../../model/useOnboardingForm";
 import { FieldLabel, PillSelect, MultiSelectChips, TextArea } from "@/shared/ui";
+import { DIET_TYPE_OPTIONS } from "@/entities/user";
 
 interface Props {
   data: OnboardingFormData;
   update: (partial: Partial<OnboardingFormData>) => void;
 }
-
-const DIET_OPTIONS = [
-  { value: "Без обмежень", label: "Без обмежень" },
-  { value: "Вегетаріанська", label: "Вегетаріанська" },
-  { value: "Веганська", label: "Веганська" },
-  { value: "Кето", label: "Кето" },
-  { value: "Палео", label: "Палео" },
-  { value: "Низький FODMAP", label: "Низький FODMAP" },
-] as const;
 
 const ALLERGEN_OPTIONS = ["Лактоза", "Горіхи", "Глютен", "Морепродукти", "Соя", "Яйця"] as const;
 
@@ -34,8 +26,8 @@ export const StepDiet: React.FC<Props> = ({ data, update }) => {
       <div>
         <FieldLabel>Тип харчування</FieldLabel>
         <PillSelect
-          options={DIET_OPTIONS}
-          value={data.dietType as (typeof DIET_OPTIONS)[number]["value"]}
+          options={DIET_TYPE_OPTIONS}
+          value={data.dietType}
           onChange={(dietType) => update({ dietType })}
         />
       </div>

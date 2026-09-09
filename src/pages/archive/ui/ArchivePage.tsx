@@ -1,24 +1,27 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { ArchiveAnalytics } from "@/widgets/archive-analytics";
 import { ArchiveHistoryList } from "@/widgets/archive-history-list";
-import { getPlans, getToken, type PlanRecord } from "@/shared/api";
+import { getPlans, type PlanRecord } from "@/shared/api";
+import { PageError } from "@/shared/ui";
+import { useLoadedData } from "@/shared/lib";
 import { ArchiveSkeleton } from "./ArchiveSkeleton";
 
 export const ArchivePage: React.FC = () => {
-  const [plans, setPlans] = useState<PlanRecord[]>([]);
-  const [isLoading, setIsLoading] = useState(() => Boolean(getToken()));
+  const {
+    data: plans,
+    isLoading,
+    error,
+    reload,
+  } = useLoadedData<PlanRecord[]>(() => getPlans(20, 0));
 
-  useEffect(() => {
-    if (!getToken()) return;
-
-    getPlans(20, 0)
-      .then(setPlans)
-      .catch(() => setPlans([]))
-      .finally(() => setIsLoading(false));
-  }, []);
-
-  if (isLoading) {
-    return <ArchiveSkeleton />;
+  // Порожній архів — не помилка: сюди веде лише збій запиту.
+  if (isLoading || error) {
+    return (
+      <>
+        <ArchiveSkeleton />
+        {error && <PageError message={error} onRetry={reload} />}
+      </>
+    );
   }
 
   return (
@@ -27,7 +30,7 @@ export const ArchivePage: React.FC = () => {
       <ArchiveAnalytics />
 
       {/* 2. Нижний виджет: список прошедших недель */}
-      <ArchiveHistoryList plans={plans} />
+      <ArchiveHistoryList plans={plans ?? []} />
     </div>
   );
 };

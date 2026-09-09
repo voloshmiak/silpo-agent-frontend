@@ -6,6 +6,7 @@ import {
   DietaryCard,
   BudgetCard,
 } from "@/widgets/profile-cards";
+import { PageError } from "@/shared/ui";
 import { ProfileSkeleton } from "./ProfileSkeleton";
 
 export const ProfilePage: React.FC = () => {
@@ -14,44 +15,29 @@ export const ProfilePage: React.FC = () => {
     updateProfile,
     saveChanges,
     resetChanges,
+    reload,
     isLoading: isLoadingSettings,
     isSaving,
     isSaved,
     error: settingsError,
     isDirty,
   } = useUserProfile();
-  // Доки налаштування їдуть з бекенду, показуємо скелетон замість чужих цифр
+
+  // Доки налаштування їдуть з бекенду — скелетон замість чужих цифр. Якщо не
+  // доїхали, скелетон лишається, а причину видно знизу.
   if (isLoadingSettings || !profile) {
-    return <ProfileSkeleton />;
+    return (
+      <>
+        <ProfileSkeleton />
+        {!isLoadingSettings && (
+          <PageError
+            message={settingsError ?? "Параметри не завантажились."}
+            onRetry={reload}
+          />
+        )}
+      </>
+    );
   }
-
-  const handleBudgetChange = (weeklyLimit: number) => {
-    updateProfile({
-      budget: { ...profile.budget, weeklyLimit },
-    });
-  };
-
-  const handleScheduleChange = (schedule: typeof profile.schedule) => {
-    updateProfile({ schedule });
-  };
-
-  const handleRemoveAllergen = (allergen: string) => {
-    updateProfile({
-      dietaryRestrictions: {
-        ...profile.dietaryRestrictions,
-        allergens: profile.dietaryRestrictions.allergens.filter((a) => a !== allergen),
-      },
-    });
-  };
-
-  const handleRemoveStopProduct = (product: string) => {
-    updateProfile({
-      dietaryRestrictions: {
-        ...profile.dietaryRestrictions,
-        stopProducts: profile.dietaryRestrictions.stopProducts.filter((p) => p !== product),
-      },
-    });
-  };
 
   return (
     <div className="max-w-6xl w-full mx-auto p-8 space-y-6">
@@ -98,16 +84,15 @@ export const ProfilePage: React.FC = () => {
           />
           <SportScheduleCard
             schedule={profile.schedule}
-            onChange={handleScheduleChange}
+            onChange={(schedule) => updateProfile({ schedule })}
           />
           <DietaryCard
             data={profile.dietaryRestrictions}
-            onRemoveAllergen={handleRemoveAllergen}
-            onRemoveStopProduct={handleRemoveStopProduct}
+            onChange={(dietaryRestrictions) => updateProfile({ dietaryRestrictions })}
           />
           <BudgetCard
             budget={profile.budget}
-            onChangeLimit={handleBudgetChange}
+            onChange={(budget) => updateProfile({ budget })}
           />
         </div>
     </div>

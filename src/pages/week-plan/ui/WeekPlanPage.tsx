@@ -1,10 +1,11 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { WeeklyMacros, type WeekDayOption } from "@/widgets/weekly-macros";
 import { MealTimeline } from "@/widgets/meal-timeline";
 import { CartSummary } from "@/widgets/cart-summary";
-import { Button, Card } from "@/shared/ui";
+import { Button, Card, PageError } from "@/shared/ui";
+import { useLoadedData } from "@/shared/lib";
 import { useUserProfile } from "@/entities/user";
-import { getPlans, getToken, type PlanRecord } from "@/shared/api";
+import { getPlans, type PlanRecord } from "@/shared/api";
 import {
   dayFullLabel,
   dayLabel,
@@ -24,30 +25,28 @@ interface Props {
 export const WeekPlanPage: React.FC<Props> = ({ initialPlan }) => {
   const { profile } = useUserProfile();
 
-  const [planRecord, setPlanRecord] = useState<PlanRecord | null>(null);
-  const [plan, setPlan] = useState<PlanData | null>(initialPlan ?? null);
+  // План щойно з онбордингу вже на руках — тоді запит за останнім зайвий.
+  const {
+    data: planRecord,
+    isLoading: isLoadingRecord,
+    error: loadError,
+    reload,
+  } = useLoadedData<PlanRecord | null>(async () =>
+    initialPlan ? null : (await getPlans(1, 0))[0] ?? null
+  );
+  const isLoadingPlan = !initialPlan && isLoadingRecord;
+
+  const loadedPlan = useMemo(
+    () => (planRecord ? parsePlanContent(planRecord.content) : null),
+    [planRecord]
+  );
+
+  const [generatedPlan, setGeneratedPlan] = useState<PlanData | null>(initialPlan ?? null);
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
   const [completedMeals, setCompletedMeals] = useState<Record<string, boolean>>({});
+  const plan = generatedPlan ?? loadedPlan;
   const [renderedPlan, setRenderedPlan] = useState<PlanData | null>(plan);
-  const [isLoadingPlan, setIsLoadingPlan] = useState(
-    () => !initialPlan && Boolean(getToken())
-  );
   const { generate, status: regenStatus, currentStep, error: regenError } = usePlanGeneration();
-
-  useEffect(() => {
-    if (initialPlan) return;
-
-    getPlans(1, 0)
-      .then(([latest]) => {
-        if (!latest) return;
-        setPlanRecord(latest);
-        setPlan(parsePlanContent(latest.content));
-      })
-      .catch(() => {
-        // не авторизовано або бек недоступний — покажемо порожній стан
-      })
-      .finally(() => setIsLoadingPlan(false));
-  }, [initialPlan]);
 
   // Новий план — скидаємо вибраний день і відмітки виконання
   if (renderedPlan !== plan) {
@@ -82,19 +81,17 @@ export const WeekPlanPage: React.FC<Props> = ({ initialPlan }) => {
     setCompletedMeals((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
+  // Профіль сюди більше не їде — бекенд читає його з `user_settings`. Гілка
+  // `!profile` лишається як ознака того, що налаштування ще вантажаться: поки
+  // їх немає, кнопка все одно заблокована.
   const handleRegenerate = async (reason: string) => {
     if (!profile) return;
     try {
       const result = await generate({
-        budgetUah: profile.budget.weeklyLimit,
-        workouts: profile.schedule.weeklyWorkoutsCount,
-        sex: profile.physical.gender === "чол." ? "male" : "female",
-        age: profile.physical.age,
         note: reason,
-        targetWeight: profile.physical.targetWeightKg,
         planId: planRecord?.id,
       });
-      setPlan(result);
+      setGeneratedPlan(result);
     } catch {
       // помилка вже збережена в regenError хука і показується нижче
     }
@@ -102,8 +99,15 @@ export const WeekPlanPage: React.FC<Props> = ({ initialPlan }) => {
 
   const isRegenerating = regenStatus === "streaming";
 
-  if (isLoadingPlan) {
-    return <WeekPlanSkeleton />;
+  // Збій запиту — не те саме, що відсутній план: там пропонуємо згенерувати,
+  // тут показувати нема чого, бо ми не знаємо, є план чи ні.
+  if (isLoadingPlan || (loadError && !plan)) {
+    return (
+      <>
+        <WeekPlanSkeleton />
+        {loadError && <PageError message={loadError} onRetry={reload} />}
+      </>
+    );
   }
 
   // Плану ще немає (або він без днів) — показуємо порожній стан, а не демо-тиждень

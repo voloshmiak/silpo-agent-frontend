@@ -18,15 +18,6 @@ interface Props {
   onComplete: (plan: PlanData) => void;
 }
 
-function buildNote(data: ReturnType<typeof useOnboardingForm>["data"]): string {
-  const parts: string[] = [];
-  if (data.dietType !== "Без обмежень") parts.push(`тип харчування: ${data.dietType}`);
-  if (data.allergens.length) parts.push(`алергія: ${data.allergens.join(", ")}`);
-  if (data.stopProducts.length) parts.push(`не їсти: ${data.stopProducts.join(", ")}`);
-  if (data.note.trim()) parts.push(data.note.trim());
-  return parts.join("; ");
-}
-
 export const OnboardingPage: React.FC<Props> = ({ registerUser, onComplete }) => {
   const { step, data, update, goNext, goBack, canProceed, isLastStep } = useOnboardingForm();
   const { status, currentStep, generate, error } = usePlanGeneration();
@@ -72,15 +63,10 @@ export const OnboardingPage: React.FC<Props> = ({ registerUser, onComplete }) =>
       // 3. Зберігаємо токен Сільпо, отриманий на кроці входу (критично перед генерацією)
       await saveSilpoToken(data.silpoAccessToken, data.silpoRefreshToken || undefined);
 
-      // 4. Запускаємо SSE-потік генерації плану
-      const plan = await generate({
-        budgetUah: Number(data.budgetUah) || 2000,
-        workouts: workoutsPerWeek(data),
-        sex: data.gender === "чол." ? "male" : "female",
-        age: Number(data.age) || 25,
-        note: buildNote(data),
-        targetWeight: data.targetWeightKg ? Number(data.targetWeightKg) : undefined,
-      });
+      // 4. Запускаємо SSE-потік генерації плану. Профіль, бюджет, тренування
+      //    та обмеження бекенд візьме з налаштувань, збережених на кроці 2 —
+      //    звідси їде лише те, чого в них немає: побажання вільним текстом.
+      const plan = await generate({ note: data.note.trim() });
 
       onComplete(plan);
     } catch (err) {

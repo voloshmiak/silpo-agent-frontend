@@ -1,10 +1,8 @@
 import type { UserSettings, UserSettingsPayload } from "@/shared/api";
 import type { DayOfWeek, UserProfile, WorkoutScheduleItem, WorkoutType } from "./types";
+import { toDietType, toPromoPriority } from "./vocabulary";
 
 export const WEEK_DAYS: DayOfWeek[] = ["ПН", "ВТ", "СР", "ЧТ", "ПТ", "СБ", "НД"];
-
-const PROMO_PRIORITIES = ["Високий", "Середній", "Низький"] as const;
-type PromoPriority = (typeof PROMO_PRIORITIES)[number];
 
 /** Темп зміни ваги за замовчуванням, поки користувач не задав власний. */
 const PACE_BY_FOCUS: Record<string, number> = {
@@ -46,16 +44,7 @@ export function scheduleToMap(days: WorkoutScheduleItem[]): Record<string, strin
   return map;
 }
 
-function toPromoPriority(raw: string): PromoPriority {
-  return (PROMO_PRIORITIES as readonly string[]).includes(raw)
-    ? (raw as PromoPriority)
-    : "Середній";
-}
-
-export function settingsToProfile(
-  settings: UserSettings,
-  fallback: UserProfile
-): UserProfile {
+export function settingsToProfile(settings: UserSettings): UserProfile {
   return {
     id: settings.user_id,
     physical: {
@@ -76,12 +65,10 @@ export function settingsToProfile(
     dietaryRestrictions: {
       allergens: settings.allergens ?? [],
       stopProducts: settings.excluded_products ?? [],
-      dietType: settings.diet_type,
+      dietType: toDietType(settings.diet_type),
     },
     budget: {
       weeklyLimit: settings.weekly_budget,
-      // Статистика витрат не входить у контракт налаштувань — лишаємо як є
-      averageSpent8Weeks: fallback.budget.averageSpent8Weeks,
       promotionsPriority: toPromoPriority(settings.promo_priority),
       deliveryIncluded: settings.delivery_included,
     },
