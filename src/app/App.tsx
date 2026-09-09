@@ -7,6 +7,7 @@ import {
   useLocation,
   useNavigate,
 } from "react-router-dom";
+import { useState } from "react";
 import { Header } from "@/widgets/header";
 import { ProfilePage } from "@/pages/profile";
 import { WeekPlanPage } from "@/pages/week-plan";
@@ -28,6 +29,7 @@ function AppRoutes() {
   // Єдина точка авторизації: хук робить GET /users/me, тож викликаємо його
   // тут один раз і передаємо результат униз, а не смикаємо в кожному екрані
   const { user, isAuthenticated, isLoading, registerUser, logout } = useAuthUser();
+  const [isOnboardingGenerating, setIsOnboardingGenerating] = useState(false);
 
   // Доки не знаємо, чи є валідний JWT, не можна вирішувати, куди пускати
   if (isLoading) {
@@ -39,10 +41,14 @@ function AppRoutes() {
       <Route
         path="/onboarding"
         element={
-          isAuthenticated ? (
+          isAuthenticated && !isOnboardingGenerating ? (
             <Navigate to="/week" replace />
           ) : (
-            <OnboardingRoute registerUser={registerUser} />
+            <OnboardingRoute
+              registerUser={registerUser}
+              onGenerationStarted={() => setIsOnboardingGenerating(true)}
+              onComplete={() => setIsOnboardingGenerating(false)}
+            />
           )
         }
       />
@@ -93,7 +99,15 @@ function AppLayout({
   );
 }
 
-function OnboardingRoute({ registerUser }: { registerUser: (name: string) => Promise<unknown> }) {
+function OnboardingRoute({
+  registerUser,
+  onGenerationStarted,
+  onComplete,
+}: {
+  registerUser: (name: string) => Promise<unknown>;
+  onGenerationStarted: () => void;
+  onComplete: (plan: PlanData) => void;
+}) {
   const navigate = useNavigate();
 
   // Свіжозгенерований план передаємо через history state, щоб «Тиждень»
@@ -101,7 +115,11 @@ function OnboardingRoute({ registerUser }: { registerUser: (name: string) => Pro
   return (
     <OnboardingPage
       registerUser={registerUser}
-      onComplete={(plan) => navigate("/week", { replace: true, state: { plan } })}
+      onGenerationStarted={onGenerationStarted}
+      onComplete={(plan) => {
+        onComplete(plan);
+        navigate("/week", { replace: true, state: { plan } });
+      }}
     />
   );
 }

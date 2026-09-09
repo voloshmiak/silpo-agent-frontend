@@ -15,10 +15,15 @@ import { defaultPaceForFocus, scheduleToMap } from "@/entities/user";
 
 interface Props {
   registerUser: (name: string) => Promise<unknown>;
+  onGenerationStarted: () => void;
   onComplete: (plan: PlanData) => void;
 }
 
-export const OnboardingPage: React.FC<Props> = ({ registerUser, onComplete }) => {
+export const OnboardingPage: React.FC<Props> = ({
+  registerUser,
+  onGenerationStarted,
+  onComplete,
+}) => {
   const { step, data, update, goNext, goBack, canProceed, isLastStep } = useOnboardingForm();
   const { status, currentStep, generate, error } = usePlanGeneration();
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -34,6 +39,7 @@ export const OnboardingPage: React.FC<Props> = ({ registerUser, onComplete }) =>
     setSubmitError(null);
     try {
       const userName = data.name.trim() || "Користувач";
+      onGenerationStarted();
 
       // 1. Створюємо юзера та записуємо JWT
       await registerUser(userName);
