@@ -112,7 +112,7 @@ export const PhysicalDataCard: React.FC<Props> = ({ data, onChange }) => {
 };
 
 const inputClass =
-  "w-20 h-7 px-2 text-right rounded-md border border-[#D8D2C2] bg-[#E5E0D3]/40 text-sm font-semibold text-zinc-900 outline-none focus:border-zinc-500 transition-colors";
+  "w-20 h-7 px-2 text-center rounded-md border border-[#D8D2C2] bg-[#E5E0D3]/40 text-sm font-semibold text-zinc-900 outline-none focus:border-zinc-500 transition-colors";
 
 interface NumberInputProps
   extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "value" | "onChange" | "type"> {

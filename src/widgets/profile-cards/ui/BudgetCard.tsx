@@ -40,10 +40,6 @@ export const BudgetCard: React.FC<Props> = ({ budget, onChangeLimit }) => {
 
       <div className="space-y-2 pt-4 border-t border-[#DFDACB] text-xs">
         <div className="flex justify-between">
-          <span className="text-zinc-500">Середні витрати за 8 тижнів</span>
-          <span className="font-mono font-semibold">{budget.averageSpent8Weeks} ₴</span>
-        </div>
-        <div className="flex justify-between">
           <span className="text-zinc-500">Пріоритет акцій Сільпо</span>
           <span className="font-semibold text-[#FF5C00]">{budget.promotionsPriority}</span>
         </div>
