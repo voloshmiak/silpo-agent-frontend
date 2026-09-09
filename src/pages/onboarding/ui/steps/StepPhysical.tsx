@@ -1,7 +1,12 @@
 import React from "react";
 import type { OnboardingFormData } from "../../model/useOnboardingForm";
 import { FieldLabel, PillSelect, TextInput } from "@/shared/ui";
-import { getFieldError, AGE_RANGE, HEIGHT_RANGE, WEIGHT_RANGE } from "../../model/validation";
+import {
+  getVisibleFieldError,
+  AGE_RANGE,
+  HEIGHT_RANGE,
+  WEIGHT_RANGE,
+} from "../../model/validation";
 
 interface Props {
   data: OnboardingFormData;
@@ -14,9 +19,9 @@ const GENDER_OPTIONS = [
 ] as const;
 
 export const StepPhysical: React.FC<Props> = ({ data, update }) => {
-  const heightError = getFieldError("heightCm", data);
-  const weightError = getFieldError("currentWeightKg", data);
-  const ageError = getFieldError("age", data);
+  const heightError = getVisibleFieldError("heightCm", data);
+  const weightError = getVisibleFieldError("currentWeightKg", data);
+  const ageError = getVisibleFieldError("age", data);
 
   return (
     <div className="space-y-5">
@@ -36,6 +41,11 @@ export const StepPhysical: React.FC<Props> = ({ data, update }) => {
             aria-invalid={Boolean(heightError)}
           />
           {heightError && <p className="mt-1 text-xs text-[#FF5C00]">{heightError}</p>}
+          {!heightError && (
+            <p className="mt-1 text-xs text-zinc-500">
+              Від {HEIGHT_RANGE.min} до {HEIGHT_RANGE.max} см
+            </p>
+          )}
         </div>
         <div>
           <FieldLabel hint="кг">Поточна вага</FieldLabel>
@@ -52,6 +62,11 @@ export const StepPhysical: React.FC<Props> = ({ data, update }) => {
             aria-invalid={Boolean(weightError)}
           />
           {weightError && <p className="mt-1 text-xs text-[#FF5C00]">{weightError}</p>}
+          {!weightError && (
+            <p className="mt-1 text-xs text-zinc-500">
+              Від {WEIGHT_RANGE.min} до {WEIGHT_RANGE.max} кг
+            </p>
+          )}
         </div>
       </div>
 
@@ -68,6 +83,11 @@ export const StepPhysical: React.FC<Props> = ({ data, update }) => {
           aria-invalid={Boolean(ageError)}
         />
         {ageError && <p className="mt-1 text-xs text-[#FF5C00]">{ageError}</p>}
+        {!ageError && (
+          <p className="mt-1 text-xs text-zinc-500">
+            Від {AGE_RANGE.min} до {AGE_RANGE.max} років
+          </p>
+        )}
       </div>
 
       <div>

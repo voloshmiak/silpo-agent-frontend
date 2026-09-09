@@ -1,6 +1,6 @@
 import React from "react";
 import type { OnboardingFormData } from "../../model/useOnboardingForm";
-import { getFieldError, WEIGHT_RANGE } from "../../model/validation";
+import { getVisibleFieldError, WEIGHT_RANGE } from "../../model/validation";
 import { FieldLabel, PillSelect, TextInput } from "@/shared/ui";
 
 interface Props {
@@ -15,8 +15,8 @@ const FOCUS_OPTIONS = [
 ] as const;
 
 export const StepGoal: React.FC<Props> = ({ data, update }) => {
-  const nameError = getFieldError("name", data);
-  const weightError = getFieldError("targetWeightKg", data);
+  const nameError = getVisibleFieldError("name", data);
+  const weightError = getVisibleFieldError("targetWeightKg", data);
 
   return (
     <div className="space-y-5">
@@ -30,6 +30,7 @@ export const StepGoal: React.FC<Props> = ({ data, update }) => {
           aria-invalid={Boolean(nameError)}
         />
         {nameError && <p className="mt-1 text-xs text-[#FF5C00]">{nameError}</p>}
+        {!nameError && <p className="mt-1 text-xs text-zinc-500">Наприклад: Іван</p>}
       </div>
 
       <div>
@@ -56,6 +57,11 @@ export const StepGoal: React.FC<Props> = ({ data, update }) => {
           aria-invalid={Boolean(weightError)}
         />
         {weightError && <p className="mt-1 text-xs text-[#FF5C00]">{weightError}</p>}
+        {!weightError && (
+          <p className="mt-1 text-xs text-zinc-500">
+            Вкажіть цільову вагу від {WEIGHT_RANGE.min} до {WEIGHT_RANGE.max} кг
+          </p>
+        )}
       </div>
     </div>
   );

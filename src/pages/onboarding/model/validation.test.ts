@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { isValidBudget, isValidWeight } from "./validation";
+import { getFieldError, isValidBudget, isValidWeight } from "./validation";
 
 describe("Onboarding Validation", () => {
   it("validates realistic body weight", () => {
@@ -11,5 +11,13 @@ describe("Onboarding Validation", () => {
   it("validates Silpo minimal weekly budget", () => {
     expect(isValidBudget(1500)).toBe(true);
     expect(isValidBudget(200)).toBe(false);
+  });
+
+  it("rejects digits in the name", () => {
+    expect(
+      getFieldError("name", {
+        name: "Іван123",
+      } as Parameters<typeof getFieldError>[1])
+    ).toBe("Ім'я не може містити цифри");
   });
 });

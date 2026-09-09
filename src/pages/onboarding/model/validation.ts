@@ -28,7 +28,9 @@ export function getFieldError(
 ): string | undefined {
   switch (field) {
     case "name":
-      return data.name.trim().length < 2 ? "Введіть ім'я (мінімум 2 символи)" : undefined;
+      if (data.name.trim().length < 2) return "Введіть ім'я (мінімум 2 символи)";
+      if (/\d/.test(data.name)) return "Ім'я не може містити цифри";
+      return undefined;
     case "targetWeightKg":
       return isValidWeight(data.targetWeightKg)
         ? undefined
@@ -54,6 +56,16 @@ export function getFieldError(
     default:
       return undefined;
   }
+}
+
+export function getVisibleFieldError(
+  field: keyof OnboardingFormData,
+  data: OnboardingFormData
+): string | undefined {
+  const value = data[field];
+  const hasValue = typeof value === "string" ? value.trim().length > 0 : value !== "";
+
+  return hasValue ? getFieldError(field, data) : undefined;
 }
 
 export function isStepValid(step: number, data: OnboardingFormData): boolean {
