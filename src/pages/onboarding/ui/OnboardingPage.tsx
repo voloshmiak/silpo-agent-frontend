@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { Button } from "@/shared/ui";
-import { useAuthUser } from "@/entities/user";
 import { PlanGenerationLoader, usePlanGeneration } from "@/features/generate-plan";
 import type { PlanData } from "@/entities/plan";
 import { ONBOARDING_STEPS, useOnboardingForm, workoutsPerWeek } from "../model/useOnboardingForm";
@@ -15,6 +14,7 @@ import { updateSettings } from "@/shared/api";
 import { defaultPaceForFocus, scheduleToMap } from "@/entities/user";
 
 interface Props {
+  registerUser: (name: string) => Promise<unknown>;
   onComplete: (plan: PlanData) => void;
 }
 
@@ -27,9 +27,8 @@ function buildNote(data: ReturnType<typeof useOnboardingForm>["data"]): string {
   return parts.join("; ");
 }
 
-export const OnboardingPage: React.FC<Props> = ({ onComplete }) => {
+export const OnboardingPage: React.FC<Props> = ({ registerUser, onComplete }) => {
   const { step, data, update, goNext, goBack, canProceed, isLastStep } = useOnboardingForm();
-  const { registerUser } = useAuthUser();
   const { status, currentStep, generate, error } = usePlanGeneration();
   const [submitError, setSubmitError] = useState<string | null>(null);
 

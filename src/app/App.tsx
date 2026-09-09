@@ -27,7 +27,7 @@ export function App() {
 function AppRoutes() {
   // Єдина точка авторизації: хук робить GET /users/me, тож викликаємо його
   // тут один раз і передаємо результат униз, а не смикаємо в кожному екрані
-  const { user, isAuthenticated, isLoading, logout } = useAuthUser();
+  const { user, isAuthenticated, isLoading, registerUser, logout } = useAuthUser();
 
   // Доки не знаємо, чи є валідний JWT, не можна вирішувати, куди пускати
   if (isLoading) {
@@ -38,7 +38,13 @@ function AppRoutes() {
     <Routes>
       <Route
         path="/onboarding"
-        element={isAuthenticated ? <Navigate to="/week" replace /> : <OnboardingRoute />}
+        element={
+          isAuthenticated ? (
+            <Navigate to="/week" replace />
+          ) : (
+            <OnboardingRoute registerUser={registerUser} />
+          )
+        }
       />
 
       <Route
@@ -87,13 +93,14 @@ function AppLayout({
   );
 }
 
-function OnboardingRoute() {
+function OnboardingRoute({ registerUser }: { registerUser: (name: string) => Promise<unknown> }) {
   const navigate = useNavigate();
 
   // Свіжозгенерований план передаємо через history state, щоб «Тиждень»
   // намалював його одразу, не чекаючи на GET /plans
   return (
     <OnboardingPage
+      registerUser={registerUser}
       onComplete={(plan) => navigate("/week", { replace: true, state: { plan } })}
     />
   );
