@@ -1,6 +1,7 @@
 import React from "react";
 import { FieldLabel, TextInput } from "@/shared/ui";
 import type { OnboardingFormData } from "../../model/useOnboardingForm";
+import { getFieldError, MIN_WEEKLY_BUDGET } from "../../model/validation";
 
 interface Props {
   data: OnboardingFormData;
@@ -8,6 +9,8 @@ interface Props {
 }
 
 export const StepBudget: React.FC<Props> = ({ data, update }) => {
+  const budgetError = getFieldError("budgetUah", data);
+
   return (
     <div className="space-y-5">
       <div>
@@ -15,12 +18,15 @@ export const StepBudget: React.FC<Props> = ({ data, update }) => {
         <TextInput
           type="number"
           inputMode="decimal"
+          min={MIN_WEEKLY_BUDGET}
           value={data.budgetUah}
           onChange={(e) =>
             update({ budgetUah: e.target.value === "" ? "" : Number(e.target.value) })
           }
           placeholder="2000"
+          aria-invalid={Boolean(budgetError)}
         />
+        {budgetError && <p className="mt-1 text-xs text-[#FF5C00]">{budgetError}</p>}
       </div>
       <p className="text-xs text-zinc-500">
         Агент підбере продукти «Сільпо» з акціями, щоб вкластись у бюджет.
