@@ -16,8 +16,8 @@ export const CartSummary: React.FC<Props> = ({ cart }) => {
   const remaining = cart.budgetLimit - cart.totalPrice;
 
   return (
-    <Card className="p-6 flex flex-col justify-between space-y-6">
-      <div>
+    <Card className="p-6 flex flex-col gap-6 lg:max-h-[calc(100vh-8rem)] min-h-0 overflow-hidden">
+      <div className="min-h-0 flex-1 flex flex-col">
         <div className="flex justify-between items-baseline mb-4">
           <h2 className="text-sm font-mono font-black tracking-widest uppercase text-zinc-900">
             Кошик «Сільпо»
@@ -28,7 +28,7 @@ export const CartSummary: React.FC<Props> = ({ cart }) => {
         </div>
 
         {/* Список товаров */}
-        <div className="space-y-1 divide-y divide-[#D8D2C2]/60">
+        <div className="min-h-0 flex-1 overflow-y-auto pr-1 space-y-1 divide-y divide-[#D8D2C2]/60">
           {cart.items.map((item) => (
             <CartProductRow key={item.id} product={item} />
           ))}
