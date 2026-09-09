@@ -51,7 +51,7 @@ export function getFieldError(
       if (!isValidWeight(data.targetWeightKg)) {
         return `Вага має бути від ${WEIGHT_RANGE.min} до ${WEIGHT_RANGE.max} кг`;
       }
-      return getWeightGoalError(data);
+      return undefined;
     case "heightCm":
       return isInRange(data.heightCm, HEIGHT_RANGE)
         ? undefined
@@ -90,7 +90,10 @@ export function getVisibleFieldError(
 export function isStepValid(step: number, data: OnboardingFormData): boolean {
   switch (step) {
     case 0:
-      return !getFieldError("name", data) && !getFieldError("targetWeightKg", data);
+      return (
+        !getFieldError("name", data) &&
+        (data.focus === "Підтримка форми" || !getFieldError("targetWeightKg", data))
+      );
     case 1:
       return (
         !getFieldError("heightCm", data) &&

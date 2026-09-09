@@ -16,7 +16,10 @@ const FOCUS_OPTIONS = [
 
 export const StepGoal: React.FC<Props> = ({ data, update }) => {
   const nameError = getVisibleFieldError("name", data);
-  const weightError = getVisibleFieldError("targetWeightKg", data);
+  const isMaintenance = data.focus === "Підтримка форми";
+  const weightError = isMaintenance
+    ? undefined
+    : getVisibleFieldError("targetWeightKg", data);
 
   return (
     <div className="space-y-5">
@@ -42,27 +45,33 @@ export const StepGoal: React.FC<Props> = ({ data, update }) => {
         />
       </div>
 
-      <div>
-        <FieldLabel hint="кг">Цільова вага</FieldLabel>
-        <TextInput
-          type="number"
-          inputMode="decimal"
-          min={WEIGHT_RANGE.min}
-          max={WEIGHT_RANGE.max}
-          value={data.targetWeightKg}
-          onChange={(e) =>
-            update({ targetWeightKg: e.target.value === "" ? "" : Number(e.target.value) })
-          }
-          placeholder="72.5"
-          aria-invalid={Boolean(weightError)}
-        />
-        {weightError && <p className="mt-1 text-xs text-[#FF5C00]">{weightError}</p>}
-        {!weightError && (
-          <p className="mt-1 text-xs text-zinc-500">
-            Вкажіть цільову вагу від {WEIGHT_RANGE.min} до {WEIGHT_RANGE.max} кг
-          </p>
-        )}
-      </div>
+      {isMaintenance ? (
+        <p className="text-xs text-zinc-500">
+          Цільова вага не потрібна: план буде розраховано на основі поточної ваги.
+        </p>
+      ) : (
+        <div>
+          <FieldLabel hint="кг">Цільова вага</FieldLabel>
+          <TextInput
+            type="number"
+            inputMode="decimal"
+            min={WEIGHT_RANGE.min}
+            max={WEIGHT_RANGE.max}
+            value={data.targetWeightKg}
+            onChange={(e) =>
+              update({ targetWeightKg: e.target.value === "" ? "" : Number(e.target.value) })
+            }
+            placeholder="72.5"
+            aria-invalid={Boolean(weightError)}
+          />
+          {weightError && <p className="mt-1 text-xs text-[#FF5C00]">{weightError}</p>}
+          {!weightError && (
+            <p className="mt-1 text-xs text-zinc-500">
+              Вкажіть цільову вагу від {WEIGHT_RANGE.min} до {WEIGHT_RANGE.max} кг
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 };

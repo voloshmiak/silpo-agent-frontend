@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { getFieldError, isValidBudget, isValidWeight } from "./validation";
+import { getFieldError, isStepValid, isValidBudget, isValidWeight } from "./validation";
 
 describe("Onboarding Validation", () => {
   it("validates realistic body weight", () => {
@@ -32,6 +32,7 @@ describe("Onboarding Validation", () => {
     expect(getFieldError("currentWeightKg", data)).toBe(
       "Для схуднення цільова вага має бути меншою за поточну"
     );
+    expect(getFieldError("targetWeightKg", data)).toBeUndefined();
   });
 
   it("requires a higher target weight when gaining weight", () => {
@@ -45,5 +46,17 @@ describe("Onboarding Validation", () => {
     expect(getFieldError("currentWeightKg", data)).toBe(
       "Для набору маси цільова вага має бути більшою за поточну"
     );
+    expect(getFieldError("targetWeightKg", data)).toBeUndefined();
+  });
+
+  it("does not require a target weight for maintenance", () => {
+    const data = {
+      name: "Іван",
+      focus: "Підтримка форми",
+      targetWeightKg: "",
+      currentWeightKg: "",
+    } as Parameters<typeof getFieldError>[1];
+
+    expect(isStepValid(0, data)).toBe(true);
   });
 });
