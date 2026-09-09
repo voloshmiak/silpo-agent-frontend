@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { getSettings, updateSettings } from "@/shared/api";
 import type { UserProfile } from "./types";
+import { getPhysicalValidationError } from "./profileValidation";
 import { profileToSettings, settingsToProfile } from "./settingsMapper";
 
 const LOAD_ERROR = "Не вдалося завантажити параметри. Перевірте зʼєднання та спробуйте ще раз.";
@@ -62,6 +63,13 @@ export const useUserProfile = () => {
 
   const saveChanges = useCallback(async () => {
     if (!profile) return null;
+
+    const physicalError = getPhysicalValidationError(profile.physical);
+    if (physicalError) {
+      setError(physicalError);
+      setIsSaved(false);
+      return null;
+    }
 
     setIsSaving(true);
     setError(null);

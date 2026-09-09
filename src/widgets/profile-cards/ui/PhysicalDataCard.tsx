@@ -1,5 +1,11 @@
 import React, { useState } from "react";
-import type { UserProfile } from "@/entities/user";
+import {
+  getPhysicalFieldError,
+  PROFILE_AGE_RANGE,
+  PROFILE_HEIGHT_RANGE,
+  PROFILE_WEIGHT_RANGE,
+  type UserProfile,
+} from "@/entities/user";
 
 const FOCUS_OPTIONS = [
   { value: "Схуднення", label: "Схуднення" },
@@ -34,21 +40,30 @@ export const PhysicalDataCard: React.FC<Props> = ({ data, onChange }) => {
           label="Поточна вага"
           unit="кг"
           step={0.1}
+          min={PROFILE_WEIGHT_RANGE.min}
+          max={PROFILE_WEIGHT_RANGE.max}
           value={data.currentWeightKg}
+          error={getPhysicalFieldError("currentWeightKg", data)}
           onChange={(v) => set("currentWeightKg", v)}
         />
         <NumberRow
           label="Цільова вага"
           unit="кг"
           step={0.1}
+          min={PROFILE_WEIGHT_RANGE.min}
+          max={PROFILE_WEIGHT_RANGE.max}
           accent
           value={data.targetWeightKg}
+          error={getPhysicalFieldError("targetWeightKg", data)}
           onChange={(v) => set("targetWeightKg", v)}
         />
         <NumberRow
           label="Зріст"
           unit="см"
+          min={PROFILE_HEIGHT_RANGE.min}
+          max={PROFILE_HEIGHT_RANGE.max}
           value={data.heightCm}
+          error={getPhysicalFieldError("heightCm", data)}
           onChange={(v) => set("heightCm", v)}
         />
 
@@ -57,9 +72,16 @@ export const PhysicalDataCard: React.FC<Props> = ({ data, onChange }) => {
           <div className="flex items-center gap-2">
             <NumberInput
               value={data.age}
+              min={PROFILE_AGE_RANGE.min}
+              max={PROFILE_AGE_RANGE.max}
               onChange={(v) => set("age", v)}
               aria-label="Вік"
             />
+            {getPhysicalFieldError("age", data) && (
+              <span className="text-[11px] text-[#FF5C00]">
+                {getPhysicalFieldError("age", data)}
+              </span>
+            )}
             <div className="flex gap-1">
               {(["чол.", "жін."] as const).map((gender) => (
                 <button
@@ -163,20 +185,28 @@ const NumberRow: React.FC<{
   unit: string;
   value: number;
   step?: number;
+  min?: number;
+  max?: number;
   accent?: boolean;
+  error?: string;
   onChange: (value: number) => void;
-}> = ({ label, unit, value, step = 1, accent, onChange }) => (
-  <div className="flex justify-between items-center py-0.5 border-b border-[#DFDACB] gap-3">
+}> = ({ label, unit, value, step = 1, min, max, accent, error, onChange }) => (
+  <div className="border-b border-[#DFDACB] py-0.5">
+    <div className="flex justify-between items-center gap-3">
     <span className="text-zinc-500 shrink-0">{label}</span>
     <div className="flex items-center gap-2">
       <NumberInput
         value={value}
         step={step}
+        min={min}
+        max={max}
         accent={accent}
         onChange={onChange}
         aria-label={label}
       />
       <span className="text-xs text-zinc-500 w-12">{unit}</span>
     </div>
+    </div>
+    {error && <p className="text-[11px] text-[#FF5C00] mt-1 text-right">{error}</p>}
   </div>
 );

@@ -1,5 +1,5 @@
 import React from "react";
-import { useUserProfile } from "@/entities/user";
+import { getPhysicalValidationError, useUserProfile } from "@/entities/user";
 import {
   PhysicalDataCard,
   SportScheduleCard,
@@ -39,6 +39,8 @@ export const ProfilePage: React.FC = () => {
     );
   }
 
+  const physicalValidationError = getPhysicalValidationError(profile.physical);
+
   return (
     <div className="max-w-6xl w-full mx-auto p-8 space-y-6">
         <div className="flex items-start justify-between">
@@ -61,7 +63,7 @@ export const ProfilePage: React.FC = () => {
             </button>
             <button
               onClick={saveChanges}
-              disabled={isSaving || !isDirty}
+              disabled={isSaving || !isDirty || Boolean(physicalValidationError)}
               className="px-4 py-2 rounded-md bg-[#D2F832] border border-black text-black text-xs font-bold uppercase tracking-wider hover:brightness-95 transition shadow-sm disabled:opacity-50 cursor-pointer"
             >
               {isSaving
@@ -75,6 +77,9 @@ export const ProfilePage: React.FC = () => {
 
         {settingsError && (
           <p className="text-xs text-[#FF5C00] font-semibold">{settingsError}</p>
+        )}
+        {physicalValidationError && (
+          <p className="text-xs text-[#FF5C00] font-semibold">{physicalValidationError}</p>
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
