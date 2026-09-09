@@ -33,4 +33,19 @@ describe("Profile physical validation", () => {
       getPhysicalFieldError("currentWeightKg", physical({ targetWeightKg: 75 }))
     ).toBe("Для схуднення цільова вага має бути меншою за поточну");
   });
+
+  it("rejects a lower target when gaining weight", () => {
+    const data = physical({
+      currentWeightKg: 80,
+      targetWeightKg: 60,
+      focus: "Набір маси",
+    });
+
+    expect(getPhysicalFieldError("targetWeightKg", data)).toBe(
+      "Для набору маси цільова вага має бути більшою за поточну"
+    );
+    expect(getPhysicalValidationError(data)).toBe(
+      "Для набору маси цільова вага має бути більшою за поточну"
+    );
+  });
 });

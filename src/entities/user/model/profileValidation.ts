@@ -16,10 +16,11 @@ export function getPhysicalFieldError(
     if (value < PROFILE_WEIGHT_RANGE.min || value > PROFILE_WEIGHT_RANGE.max) {
       return `Вага має бути від ${PROFILE_WEIGHT_RANGE.min} до ${PROFILE_WEIGHT_RANGE.max} кг`;
     }
-    if (data.focus === "Схуднення" && data.targetWeightKg >= data.currentWeightKg) {
+    const focus = data.focus.trim();
+    if (focus === "Схуднення" && data.targetWeightKg >= data.currentWeightKg) {
       return "Для схуднення цільова вага має бути меншою за поточну";
     }
-    if (data.focus === "Набір маси" && data.targetWeightKg <= data.currentWeightKg) {
+    if (focus === "Набір маси" && data.targetWeightKg <= data.currentWeightKg) {
       return "Для набору маси цільова вага має бути більшою за поточну";
     }
     return undefined;

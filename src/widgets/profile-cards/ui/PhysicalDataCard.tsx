@@ -135,12 +135,14 @@ export const PhysicalDataCard: React.FC<Props> = ({ data, onChange }) => {
 
 const inputClass =
   "w-20 h-7 px-2 text-center rounded-md border border-[#D8D2C2] bg-[#E5E0D3]/40 text-sm font-semibold text-zinc-900 outline-none focus:border-zinc-500 transition-colors";
+const invalidInputClass = "border-[#FF5C00] focus:border-[#FF5C00]";
 
 interface NumberInputProps
   extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "value" | "onChange" | "type"> {
   value: number;
   onChange: (value: number) => void;
   accent?: boolean;
+  error?: string;
 }
 
 /**
@@ -152,6 +154,7 @@ const NumberInput: React.FC<NumberInputProps> = ({
   value,
   onChange,
   accent,
+  error,
   className,
   ...rest
 }) => {
@@ -175,7 +178,7 @@ const NumberInput: React.FC<NumberInputProps> = ({
         if (raw !== "" && !Number.isNaN(parsed)) onChange(parsed);
       }}
       onBlur={() => setDraft(String(value))}
-      className={`${inputClass} ${accent ? "text-[#FF5C00]" : ""} ${className ?? ""}`}
+      className={`${inputClass} ${error ? invalidInputClass : ""} ${accent ? "text-[#FF5C00]" : ""} ${className ?? ""}`}
     />
   );
 };
@@ -201,8 +204,10 @@ const NumberRow: React.FC<{
         min={min}
         max={max}
         accent={accent}
+        error={error}
         onChange={onChange}
         aria-label={label}
+        aria-invalid={Boolean(error)}
       />
       <span className="text-xs text-zinc-500 w-12">{unit}</span>
     </div>
