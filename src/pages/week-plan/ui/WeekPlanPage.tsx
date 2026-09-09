@@ -151,6 +151,18 @@ export const WeekPlanPage: React.FC<Props> = ({ initialPlan }) => {
     activeDayData.workout ? "тренування" : "відпочинок"
   }`;
 
+  if (isRegenerating) {
+    return (
+      <div className="max-w-6xl w-full mx-auto p-8 flex justify-center">
+        <PlanGenerationLoader
+          step={currentStep}
+          title="Агент оновлює план"
+          hint="Перебираємо каталог «Сільпо» під нові умови"
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-6xl w-full mx-auto p-8 space-y-6">
       <WeeklyMacros
@@ -169,29 +181,19 @@ export const WeekPlanPage: React.FC<Props> = ({ initialPlan }) => {
 
       <PlanNotes plan={plan} />
 
-      {isRegenerating ? (
-        <div className="flex justify-center py-8">
-          <PlanGenerationLoader
-            step={currentStep}
-            title="Агент оновлює план"
-            hint="Перебираємо каталог «Сільпо» під нові умови"
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+        <div className="lg:col-span-2">
+          <MealTimeline
+            meals={meals}
+            title={timelineTitle}
+            onToggleComplete={handleToggleMeal}
           />
         </div>
-      ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-          <div className="lg:col-span-2">
-            <MealTimeline
-              meals={meals}
-              title={timelineTitle}
-              onToggleComplete={handleToggleMeal}
-            />
-          </div>
 
-          <div className="lg:col-span-1">
-            <CartSummary cart={cart} />
-          </div>
+        <div className="lg:col-span-1">
+          <CartSummary cart={cart} />
         </div>
-      )}
+      </div>
     </div>
   );
 };
