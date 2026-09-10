@@ -15,7 +15,8 @@ import {
   planToCartData,
   type PlanData,
 } from "@/entities/plan";
-import { PlanGenerationLoader, usePlanGeneration } from "@/features/generate-plan";
+import { usePlanGeneration } from "@/features/generate-plan";
+import { PlanGenerationLoader } from "@/features/generate-plan/ui/PlanGenerationLoader";
 import { WeekPlanSkeleton } from "./WeekPlanSkeleton";
 
 interface Props {

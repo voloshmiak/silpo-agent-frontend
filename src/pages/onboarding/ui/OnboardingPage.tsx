@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Button } from "@/shared/ui";
-import { PlanGenerationLoader, usePlanGeneration } from "@/features/generate-plan";
+import { usePlanGeneration } from "@/features/generate-plan";
+import { PlanGenerationLoader } from "@/features/generate-plan/ui/PlanGenerationLoader";
 import type { PlanData } from "@/entities/plan";
 import { ONBOARDING_STEPS, useOnboardingForm, workoutsPerWeek } from "../model/useOnboardingForm";
 import { StepGoal } from "./steps/StepGoal";

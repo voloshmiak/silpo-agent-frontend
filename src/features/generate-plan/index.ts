@@ -1,3 +1,3 @@
 export * from "./model/usePlanGeneration";
 export * from "./model/toolLabels";
-export * from "./ui/PlanGenerationLoader";
+export { PlanGenerationLoader } from "./ui/PlanGenerationLoader";
