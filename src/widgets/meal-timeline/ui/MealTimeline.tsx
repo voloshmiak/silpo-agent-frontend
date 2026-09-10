@@ -6,12 +6,14 @@ interface Props {
   meals: MealItem[];
   title?: string;
   onToggleComplete?: (id: string) => void;
+  readOnly?: boolean;
 }
 
 export const MealTimeline: React.FC<Props> = ({
   meals,
   title = "Раціон дня",
   onToggleComplete,
+  readOnly = false,
 }) => {
   const completedCount = meals.filter((m) => m.isCompleted).length;
 
@@ -34,6 +36,7 @@ export const MealTimeline: React.FC<Props> = ({
             key={meal.id}
             meal={meal}
             onToggleComplete={onToggleComplete}
+            readOnly={readOnly}
           />
         ))}
       </div>
