@@ -48,7 +48,7 @@ export const StepDiet: React.FC<Props> = ({ data, update }) => {
           options={STOP_PRODUCT_OPTIONS}
           values={data.stopProducts}
           onChange={(stopProducts) => update({ stopProducts })}
-          activeVariant="outline"
+          activeVariant="orange"
         />
       </div>
 

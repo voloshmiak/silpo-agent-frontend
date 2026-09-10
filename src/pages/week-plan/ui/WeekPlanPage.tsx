@@ -136,7 +136,7 @@ export const WeekPlanPage: React.FC<Props> = ({ initialPlan }) => {
               size="lg"
               disabled={!profile}
               onClick={() => handleRegenerate("")}
-            >
+              >
               {profile ? "Згенерувати план →" : "Завантажуємо параметри…"}
             </Button>
           </Card>
@@ -144,10 +144,17 @@ export const WeekPlanPage: React.FC<Props> = ({ initialPlan }) => {
       </div>
     );
   }
-
+  
   const macros = planDayToMacros(activeDayData, plan);
   const cart = planToCartData(plan);
-  const subtitle = `ціль ${plan.targets.kcal} ккал/день · Б ${plan.targets.protein_g} · Ж ${plan.targets.fat_g} · В ${plan.targets.carbs_g}`;
+  const goalTarget = plan.targets.estimated_goal_date
+  ? ` · Ціль орієнтовно до ${plan.targets.estimated_goal_date}${
+      plan.targets.estimated_weeks_to_goal
+        ? ` · ${Math.round(plan.targets.estimated_weeks_to_goal)} тиж.`
+        : ""
+    }`
+  : "";
+  const subtitle = `ціль ${plan.targets.kcal} ккал/день · Б ${plan.targets.protein_g} · Ж ${plan.targets.fat_g} · В ${plan.targets.carbs_g}${goalTarget}`;
   const timelineTitle = `${dayFullLabel(activeDayData.day)} · ${
     activeDayData.workout ? "тренування" : "відпочинок"
   }`;
@@ -201,7 +208,7 @@ export const WeekPlanPage: React.FC<Props> = ({ initialPlan }) => {
 
 /** Єдиний текстовий блок, що лишився в контракті: підсумок від агента. */
 const PlanNotes: React.FC<{ plan: PlanData }> = ({ plan }) => {
-  const { summary, targets } = plan;
+  const { summary } = plan;
   const hasContent =
     summary.notes || summary.restrictions.length > 0 || summary.promotions.length > 0;
 
@@ -233,14 +240,6 @@ const PlanNotes: React.FC<{ plan: PlanData }> = ({ plan }) => {
         </p>
       )}
 
-      {targets.estimated_goal_date && (
-        <p className="text-[11px] font-mono text-zinc-500">
-          Ціль орієнтовно до {targets.estimated_goal_date}
-          {targets.estimated_weeks_to_goal
-            ? ` · ${Math.round(targets.estimated_weeks_to_goal)} тиж.`
-            : ""}
-        </p>
-      )}
     </Card>
   );
 };

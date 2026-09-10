@@ -43,7 +43,7 @@ export const DietaryCard: React.FC<Props> = ({ data, onChange }) => {
         <ChipList
           values={data.stopProducts}
           onChange={(stopProducts) => set("stopProducts", stopProducts)}
-          variant="outline"
+          variant="orange"
           placeholder="+ продукт"
         />
       </div>

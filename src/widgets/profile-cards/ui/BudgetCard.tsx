@@ -25,14 +25,14 @@ export const BudgetCard: React.FC<Props> = ({ budget, onChange }) => {
           </span>
         </div>
 
-        <div className="text-4xl font-serif font-bold text-zinc-900 my-3">
+        <div className="text-4xl font-serif font-bold tabular-nums lining-nums text-zinc-900 my-3">
           {budget.weeklyLimit.toLocaleString("uk-UA")} ₴
         </div>
 
         <input
           type="range"
-          min="1000"
-          max="3500"
+          min="500"
+          max="10000"
           step="50"
           value={budget.weeklyLimit}
           onChange={(e) => set("weeklyLimit", Number(e.target.value))}
@@ -40,8 +40,8 @@ export const BudgetCard: React.FC<Props> = ({ budget, onChange }) => {
           className="w-full h-2 bg-zinc-300 rounded-lg appearance-none cursor-pointer accent-[#D2F832]"
         />
         <div className="flex justify-between text-[10px] font-mono text-zinc-400 mt-1">
-          <span>1 000 ₴</span>
-          <span>3 500 ₴</span>
+          <span>500 ₴</span>
+          <span>10 000 ₴</span>
         </div>
       </div>
 

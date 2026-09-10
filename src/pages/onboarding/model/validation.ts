@@ -3,7 +3,8 @@ import type { OnboardingFormData } from "./useOnboardingForm";
 export const WEIGHT_RANGE = { min: 35, max: 250 } as const;
 export const HEIGHT_RANGE = { min: 120, max: 250 } as const;
 export const AGE_RANGE = { min: 13, max: 100 } as const;
-export const MIN_WEEKLY_BUDGET = 400;
+export const MIN_WEEKLY_BUDGET = 500;
+export const MAX_WEEKLY_BUDGET = 10000;
 
 function isInRange(value: number | "", range: { min: number; max: number }): boolean {
   return (
@@ -19,7 +20,7 @@ export function isValidWeight(weight: number | ""): boolean {
 }
 
 export function isValidBudget(budget: number | ""): boolean {
-  return budget !== "" && Number.isFinite(budget) && budget >= MIN_WEEKLY_BUDGET;
+  return budget !== "" && Number.isFinite(budget) && budget >= MIN_WEEKLY_BUDGET && budget <= MAX_WEEKLY_BUDGET;
 }
 
 function getWeightGoalError(data: OnboardingFormData): string | undefined {
@@ -66,9 +67,19 @@ export function getFieldError(
         ? undefined
         : `Вік має бути від ${AGE_RANGE.min} до ${AGE_RANGE.max} років`;
     case "budgetUah":
-      return isValidBudget(data.budgetUah)
-        ? undefined
-        : `Мінімальний бюджет — ${MIN_WEEKLY_BUDGET} ₴ на тиждень`;
+      if (data.budgetUah === "") {
+        return undefined;
+      }
+    
+      if (data.budgetUah < MIN_WEEKLY_BUDGET) {
+        return `Мінімальний бюджет — ${MIN_WEEKLY_BUDGET} ₴ на тиждень`;
+      }
+    
+      if (data.budgetUah > MAX_WEEKLY_BUDGET) {
+        return `Максимальний бюджет — ${MAX_WEEKLY_BUDGET} ₴ на тиждень`;
+      }
+      
+      return undefined;
     case "silpoAccessToken":
       return data.silpoAccessToken.trim() ? undefined : "Підключіть акаунт «Сільпо»";
     default:
