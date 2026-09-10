@@ -132,23 +132,27 @@ export const ProfilePage: React.FC = () => {
             budget={profile.budget}
             onChange={(budget) => updateProfile({ budget })}
           />
-          <section className="bg-[#EBE7DC] border border-[#D8D2C2] rounded-xl p-6 space-y-4">
-            <div>
-              <h2 className="text-xs font-mono font-bold tracking-widest uppercase">Зміна пароля</h2>
-              <p className="text-xs text-zinc-500 mt-1">Замініть пароль, який прийшов на email.</p>
-            </div>
-            <form className="space-y-3" onSubmit={handlePasswordChange}>
-              <input aria-label="Поточний пароль" type="password" required value={oldPassword} onChange={(event) => setOldPassword(event.target.value)} placeholder="Поточний пароль" className="w-full h-10 px-3 rounded-lg border border-[#D8D2C2] bg-[#E5E0D3]/40 text-sm outline-none focus:border-zinc-500" />
-              <input aria-label="Новий пароль" type="password" required value={newPassword} onChange={(event) => setNewPassword(event.target.value)} placeholder="Новий пароль" className="w-full h-10 px-3 rounded-lg border border-[#D8D2C2] bg-[#E5E0D3]/40 text-sm outline-none focus:border-zinc-500" />
-              <input aria-label="Підтвердження нового пароля" type="password" required value={passwordConfirmation} onChange={(event) => setPasswordConfirmation(event.target.value)} placeholder="Повторіть новий пароль" className="w-full h-10 px-3 rounded-lg border border-[#D8D2C2] bg-[#E5E0D3]/40 text-sm outline-none focus:border-zinc-500" />
-              {passwordError && <p className="text-xs text-[#FF5C00] font-semibold">{passwordError}</p>}
-              {passwordMessage && <p className="text-xs text-[#2E7D32] font-semibold">{passwordMessage}</p>}
-              <button type="submit" disabled={isChangingPassword} className="px-4 py-2 rounded-md bg-[#D2F832] border border-black text-black text-xs font-bold uppercase tracking-wider disabled:opacity-50">
-                {isChangingPassword ? "Збереження..." : "Змінити пароль"}
-              </button>
-            </form>
-          </section>
         </div>
+
+        <section className="bg-[#DFDACB]/60 border border-[#D8D2C2] rounded-xl p-6 space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h2 className="text-xs font-mono font-bold tracking-widest uppercase">Безпека акаунта</h2>
+              <p className="text-xs text-zinc-500 mt-1">Змініть пароль для наступних входів у SILPOFIT.</p>
+            </div>
+            <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-400">Email · пароль</span>
+          </div>
+          <form className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end" onSubmit={handlePasswordChange}>
+            <input aria-label="Поточний пароль" type="password" required value={oldPassword} onChange={(event) => setOldPassword(event.target.value)} placeholder="Поточний пароль" className="w-full h-10 px-3 rounded-lg border border-[#D8D2C2] bg-[#E5E0D3]/40 text-sm outline-none focus:border-zinc-500" />
+            <input aria-label="Новий пароль" type="password" required value={newPassword} onChange={(event) => setNewPassword(event.target.value)} placeholder="Новий пароль" className="w-full h-10 px-3 rounded-lg border border-[#D8D2C2] bg-[#E5E0D3]/40 text-sm outline-none focus:border-zinc-500" />
+            <input aria-label="Підтвердження нового пароля" type="password" required value={passwordConfirmation} onChange={(event) => setPasswordConfirmation(event.target.value)} placeholder="Повторіть новий пароль" className="w-full h-10 px-3 rounded-lg border border-[#D8D2C2] bg-[#E5E0D3]/40 text-sm outline-none focus:border-zinc-500" />
+            <button type="submit" disabled={isChangingPassword} className="h-10 px-4 rounded-md bg-[#D2F832] border border-black text-black text-xs font-bold uppercase tracking-wider disabled:opacity-50">
+              {isChangingPassword ? "Збереження..." : "Змінити пароль"}
+            </button>
+          </form>
+          {passwordError && <p className="text-xs text-[#FF5C00] font-semibold">{passwordError}</p>}
+          {passwordMessage && <p className="text-xs text-[#2E7D32] font-semibold">{passwordMessage}</p>}
+        </section>
     </div>
   );
 };
