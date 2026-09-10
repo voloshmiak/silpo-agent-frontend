@@ -3,6 +3,7 @@ import type { DietType, PromoPriority } from "./vocabulary";
 export interface BackendUser {
   id: string;
   name: string;
+  email?: string;
   weight: number;
   height: number;
   created_at: string;

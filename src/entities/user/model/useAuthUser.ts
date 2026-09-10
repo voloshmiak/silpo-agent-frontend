@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { clearToken, createUser, getMe, getToken } from "@/shared/api";
+import { clearToken, createUser, getMe, getToken, loginUser } from "@/shared/api";
 import type { BackendUser } from "./types";
 
 export const useAuthUser = () => {
@@ -15,10 +15,16 @@ export const useAuthUser = () => {
       .finally(() => setIsLoading(false));
   }, []);
 
-  const registerUser = useCallback(async (name: string) => {
-    const created = await createUser(name);
-    setUser(created);
-    return created;
+  const registerUser = useCallback(async (name: string, email: string, silpoToken: string) => {
+    const result = await createUser(name, email, silpoToken);
+    setUser(result.user);
+    return result;
+  }, []);
+
+  const signIn = useCallback(async (email: string, password: string) => {
+    const loggedIn = await loginUser(email, password);
+    setUser(loggedIn);
+    return loggedIn;
   }, []);
 
   const logout = useCallback(() => {
@@ -31,6 +37,7 @@ export const useAuthUser = () => {
     isLoading,
     isAuthenticated: Boolean(user),
     registerUser,
+    signIn,
     logout,
   };
 };

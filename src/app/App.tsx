@@ -13,9 +13,10 @@ import { ProfilePage } from "@/pages/profile";
 import { WeekPlanPage } from "@/pages/week-plan";
 import { ArchivePage } from "@/pages/archive";
 import { FeedbackPage } from "@/pages/feedback";
-import { OnboardingPage } from "@/pages/onboarding";
+import { OnboardingPage, WelcomePage } from "@/pages/onboarding";
 import { useAuthUser } from "@/entities/user";
 import type { PlanData } from "@/entities/plan";
+import type { RegistrationResult } from "@/shared/api/users";
 
 export function App() {
   return (
@@ -28,7 +29,7 @@ export function App() {
 function AppRoutes() {
   // Єдина точка авторизації: хук робить GET /users/me, тож викликаємо його
   // тут один раз і передаємо результат униз, а не смикаємо в кожному екрані
-  const { user, isAuthenticated, isLoading, registerUser, logout } = useAuthUser();
+  const { user, isAuthenticated, isLoading, registerUser, signIn, logout } = useAuthUser();
   const [isOnboardingGenerating, setIsOnboardingGenerating] = useState(false);
 
   // Доки не знаємо, чи є валідний JWT, не можна вирішувати, куди пускати
@@ -40,6 +41,10 @@ function AppRoutes() {
     <Routes>
       <Route
         path="/onboarding"
+        element={isAuthenticated ? <Navigate to="/week" replace /> : <WelcomeRoute signIn={signIn} />}
+      />
+      <Route
+        path="/onboarding/start"
         element={
           isAuthenticated && !isOnboardingGenerating ? (
             <Navigate to="/week" replace />
@@ -104,7 +109,7 @@ function OnboardingRoute({
   onGenerationStarted,
   onComplete,
 }: {
-  registerUser: (name: string) => Promise<unknown>;
+  registerUser: (name: string, email: string, silpoToken: string) => Promise<RegistrationResult>;
   onGenerationStarted: () => void;
   onComplete: (plan: PlanData) => void;
 }) {
@@ -119,6 +124,20 @@ function OnboardingRoute({
       onComplete={(plan) => {
         onComplete(plan);
         navigate("/week", { replace: true, state: { plan } });
+      }}
+    />
+  );
+}
+
+function WelcomeRoute({ signIn }: { signIn: (email: string, password: string) => Promise<unknown> }) {
+  const navigate = useNavigate();
+
+  return (
+    <WelcomePage
+      onStartOnboarding={() => navigate("/onboarding/start")}
+      onSignIn={async (email, password) => {
+        await signIn(email, password);
+        navigate("/week", { replace: true });
       }}
     />
   );

@@ -48,6 +48,10 @@ export function getFieldError(
       if (data.name.trim().length < 2) return "Введіть ім'я (мінімум 2 символи)";
       if (/\d/.test(data.name)) return "Ім'я не може містити цифри";
       return undefined;
+    case "email":
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email.trim())
+        ? undefined
+        : "Введіть коректний email";
     case "targetWeightKg":
       if (!isValidWeight(data.targetWeightKg)) {
         return `Вага має бути від ${WEIGHT_RANGE.min} до ${WEIGHT_RANGE.max} кг`;
@@ -117,7 +121,7 @@ export function isStepValid(step: number, data: OnboardingFormData): boolean {
     case 4:
       return !getFieldError("budgetUah", data);
     case 5:
-      return !getFieldError("silpoAccessToken", data);
+      return !getFieldError("email", data) && !getFieldError("silpoAccessToken", data);
     default:
       return false;
   }

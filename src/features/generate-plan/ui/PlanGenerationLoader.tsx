@@ -6,12 +6,14 @@ interface Props {
   step: string;
   title?: string;
   hint?: string;
+  generatedPassword?: string;
 }
 
 export const PlanGenerationLoader: React.FC<Props> = ({
   step,
   title = "Агент будує ваш план",
   hint = "Це займе трохи часу — читаємо каталог «Сільпо» й рахуємо БЖВ",
+  generatedPassword,
 }) => (
   <div className="w-[clamp(320px,60vw,2000px)] bg-[#ECE8DC] border border-[#D8D2C2] rounded-2xl p-6 sm:p-8 text-center space-y-5">
     <div className="space-y-2">
@@ -31,5 +33,12 @@ export const PlanGenerationLoader: React.FC<Props> = ({
     </div>
 
     <SilpoCatcher />
+    {generatedPassword && (
+      <div className="rounded-lg border border-[#D8D2C2] bg-[#F4F1E8] px-3 py-2 text-left text-xs">
+        <p className="font-semibold text-zinc-700">Пароль для входу:</p>
+        <code className="font-mono text-sm text-zinc-900">{generatedPassword}</code>
+        <p className="mt-1 text-[10px] text-zinc-500">Збережіть його, якщо лист не прийшов.</p>
+      </div>
+    )}
   </div>
 );

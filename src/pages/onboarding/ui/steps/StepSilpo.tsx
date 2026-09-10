@@ -1,7 +1,9 @@
 import React, { useState } from "react";
 import { Button } from "@/shared/ui";
+import { FieldLabel, TextInput } from "@/shared/ui";
 import { loginWithSilpo } from "@/shared/api";
 import type { OnboardingFormData } from "../../model/useOnboardingForm";
+import { getVisibleFieldError } from "../../model/validation";
 
 interface Props {
   data: OnboardingFormData;
@@ -13,6 +15,7 @@ export const StepSilpo: React.FC<Props> = ({ data, update }) => {
   const [error, setError] = useState<string | null>(null);
 
   const isConnected = Boolean(data.silpoAccessToken);
+  const emailError = getVisibleFieldError("email", data);
 
   const handleLogin = async () => {
     setIsConnecting(true);
@@ -32,6 +35,19 @@ export const StepSilpo: React.FC<Props> = ({ data, update }) => {
 
   return (
     <div className="space-y-5">
+      <div>
+        <FieldLabel>Ваш email</FieldLabel>
+        <TextInput
+          type="email"
+          value={data.email}
+          onChange={(event) => update({ email: event.target.value })}
+          placeholder="you@example.com"
+          aria-invalid={Boolean(emailError)}
+        />
+        {emailError && <p className="mt-1 text-xs text-[#FF5C00]">{emailError}</p>}
+        {!emailError && <p className="mt-1 text-xs text-zinc-500">Пароль для входу прийде на цю адресу</p>}
+      </div>
+
       <p className="text-xs text-zinc-600 leading-relaxed">
         Агент працює з вашим справжнім акаунтом «Сільпо»: читає каталог і ціни вашого
         магазину, враховує акції та збирає кошик. Для цього потрібен вхід.

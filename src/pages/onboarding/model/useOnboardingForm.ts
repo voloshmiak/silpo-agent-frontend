@@ -10,6 +10,7 @@ export { isStepValid } from "./validation";
 
 export interface OnboardingFormData {
   name: string;
+  email: string;
   focus: string;
   targetWeightKg: number | "";
   heightCm: number | "";
@@ -38,6 +39,7 @@ export const ONBOARDING_STEPS = [
 
 const initialData: OnboardingFormData = {
   name: "",
+  email: "",
   focus: "Схуднення",
   targetWeightKg: "",
   heightCm: "",

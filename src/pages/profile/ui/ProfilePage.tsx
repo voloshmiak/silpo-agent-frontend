@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useState } from "react";
 import { getPhysicalValidationError, useUserProfile } from "@/entities/user";
+import { changePassword } from "@/shared/api";
 import {
   PhysicalDataCard,
   SportScheduleCard,
@@ -10,6 +11,12 @@ import { PageError } from "@/shared/ui";
 import { ProfileSkeleton } from "./ProfileSkeleton";
 
 export const ProfilePage: React.FC = () => {
+  const [oldPassword, setOldPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [passwordConfirmation, setPasswordConfirmation] = useState("");
+  const [passwordMessage, setPasswordMessage] = useState<string | null>(null);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
   const {
     profile,
     updateProfile,
@@ -40,6 +47,32 @@ export const ProfilePage: React.FC = () => {
   }
 
   const physicalValidationError = getPhysicalValidationError(profile.physical);
+
+  const handlePasswordChange = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setPasswordMessage(null);
+    setPasswordError(null);
+    if (newPassword.length < 8) {
+      setPasswordError("Новий пароль має містити щонайменше 8 символів");
+      return;
+    }
+    if (newPassword !== passwordConfirmation) {
+      setPasswordError("Паролі не збігаються");
+      return;
+    }
+    setIsChangingPassword(true);
+    try {
+      const result = await changePassword(oldPassword, newPassword);
+      setPasswordMessage(result.message ?? "Пароль успішно оновлено");
+      setOldPassword("");
+      setNewPassword("");
+      setPasswordConfirmation("");
+    } catch (err) {
+      setPasswordError(err instanceof Error ? err.message : "Не вдалося оновити пароль");
+    } finally {
+      setIsChangingPassword(false);
+    }
+  };
 
   return (
     <div className="max-w-6xl w-full mx-auto p-8 space-y-6">
@@ -99,6 +132,22 @@ export const ProfilePage: React.FC = () => {
             budget={profile.budget}
             onChange={(budget) => updateProfile({ budget })}
           />
+          <section className="bg-[#EBE7DC] border border-[#D8D2C2] rounded-xl p-6 space-y-4">
+            <div>
+              <h2 className="text-xs font-mono font-bold tracking-widest uppercase">Зміна пароля</h2>
+              <p className="text-xs text-zinc-500 mt-1">Замініть пароль, який прийшов на email.</p>
+            </div>
+            <form className="space-y-3" onSubmit={handlePasswordChange}>
+              <input aria-label="Поточний пароль" type="password" required value={oldPassword} onChange={(event) => setOldPassword(event.target.value)} placeholder="Поточний пароль" className="w-full h-10 px-3 rounded-lg border border-[#D8D2C2] bg-[#E5E0D3]/40 text-sm outline-none focus:border-zinc-500" />
+              <input aria-label="Новий пароль" type="password" required value={newPassword} onChange={(event) => setNewPassword(event.target.value)} placeholder="Новий пароль" className="w-full h-10 px-3 rounded-lg border border-[#D8D2C2] bg-[#E5E0D3]/40 text-sm outline-none focus:border-zinc-500" />
+              <input aria-label="Підтвердження нового пароля" type="password" required value={passwordConfirmation} onChange={(event) => setPasswordConfirmation(event.target.value)} placeholder="Повторіть новий пароль" className="w-full h-10 px-3 rounded-lg border border-[#D8D2C2] bg-[#E5E0D3]/40 text-sm outline-none focus:border-zinc-500" />
+              {passwordError && <p className="text-xs text-[#FF5C00] font-semibold">{passwordError}</p>}
+              {passwordMessage && <p className="text-xs text-[#2E7D32] font-semibold">{passwordMessage}</p>}
+              <button type="submit" disabled={isChangingPassword} className="px-4 py-2 rounded-md bg-[#D2F832] border border-black text-black text-xs font-bold uppercase tracking-wider disabled:opacity-50">
+                {isChangingPassword ? "Збереження..." : "Змінити пароль"}
+              </button>
+            </form>
+          </section>
         </div>
     </div>
   );
