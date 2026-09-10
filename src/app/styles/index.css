@@ -59,9 +59,21 @@ body {
   animation: plan-fade-in 0.35s ease-out, plan-shimmer 2.4s linear infinite;
 }
 
+@keyframes silpo-explosion {
+  0% { opacity: 1; transform: translate(-50%, 0) scale(0.55); }
+  55% { opacity: 1; transform: translate(-50%, -8px) scale(1.25); }
+  100% { opacity: 0; transform: translate(-50%, -18px) scale(1.55); }
+}
+
+.silpo-explosion {
+  pointer-events: none;
+  animation: silpo-explosion 420ms ease-out forwards;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .plan-dot,
-  .plan-step-text {
+  .plan-step-text,
+  .silpo-explosion {
     animation: none;
   }
   .plan-dot { opacity: 1; }
