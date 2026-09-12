@@ -15,6 +15,7 @@ import { ArchivePage } from "@/pages/archive";
 import { FeedbackPage } from "@/pages/feedback";
 import { OnboardingPage, WelcomePage } from "@/pages/onboarding";
 import { useAuthUser } from "@/entities/user";
+import { PreviousPlanPage } from "@/pages/previous-plan";
 import type { PlanData } from "@/entities/plan";
 import type { RegistrationResult } from "@/shared/api/users";
 
@@ -70,6 +71,7 @@ function AppRoutes() {
         <Route path="/week" element={<WeekRoute />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/archive" element={<ArchivePage />} />
+        <Route path="/archive/:id" element={<PreviousPlanPage />} />
         <Route path="/feedback" element={<FeedbackPage />} />
       </Route>
 

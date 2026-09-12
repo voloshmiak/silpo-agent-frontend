@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import { Card, Badge } from "@/shared/ui";
 import type { PlanRecord } from "@/shared/api";
 import { parsePlanContent, type PlanData } from "@/entities/plan";
@@ -76,9 +77,14 @@ export const ArchiveHistoryList: React.FC<Props> = ({ plans }) => {
 
                 <div className="flex items-center gap-4 self-end md:self-auto font-mono text-xs">
                   <span className="text-zinc-500">{formatDate(plan.created_at)}</span>
-                  <Badge variant="outline" className="text-[10px]">
-                    Деталі →
-                  </Badge>
+                  <Link to={`/archive/${plan.id}`}>
+                    <Badge
+                      variant="outline"
+                      className="text-[10px] cursor-pointer"
+                    >
+                      Деталі →
+                    </Badge>
+                  </Link>
                 </div>
               </div>
             );

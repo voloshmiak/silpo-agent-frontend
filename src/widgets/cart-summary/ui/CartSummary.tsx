@@ -6,9 +6,11 @@ import { formatCurrency } from "@/shared/lib";
 
 interface Props {
   cart: CartData;
+  showOrderButton?: boolean;
+  showDeliverySchedule?: boolean;
 }
 
-export const CartSummary: React.FC<Props> = ({ cart }) => {
+export const CartSummary: React.FC<Props> = ({ cart, showOrderButton = true, showDeliverySchedule = true}) => {
   const budgetPercentage = Math.min(
     100,
     Math.round((cart.totalPrice / cart.budgetLimit) * 100)
@@ -78,11 +80,16 @@ export const CartSummary: React.FC<Props> = ({ cart }) => {
         </div>
 
         {/* Интерактивная кнопка из features */}
-        <OrderCartButton totalPrice={cart.totalPrice} />
+        {showOrderButton && (
+          <OrderCartButton totalPrice={cart.totalPrice} />
+        )}
 
-        <div className="text-center text-[10px] font-mono text-zinc-400 uppercase tracking-wider">
-          Доставка сьогодні · {cart.deliveryTimeSlot}
-        </div>
+        {showDeliverySchedule && (
+          <div className="text-center text-[10px] font-mono text-zinc-400 uppercase tracking-wider">
+            Доставка сьогодні · {cart.deliveryTimeSlot}
+          </div>
+        )}
+
       </div>
     </Card>
   );

@@ -1,15 +1,20 @@
 import React from "react";
 import type { MealItem } from "../model/types";
 import { Checkbox } from "@/shared/ui";
+import { cn } from "@/shared/lib";
 
 interface Props {
   meal: MealItem;
   onToggleComplete?: (id: string) => void;
+  readOnly?: boolean;
 }
 
-export const MealRow: React.FC<Props> = ({ meal, onToggleComplete }) => {
+export const MealRow: React.FC<Props> = ({ meal, onToggleComplete, readOnly = false }) => {
   return (
-    <div className="bg-[#DFDACB]/40 hover:bg-[#DFDACB]/70 border border-[#D8D2C2] p-4 rounded-xl flex items-center justify-between transition-colors">
+    <div className={cn(
+      "bg-[#DFDACB]/40 border border-[#D8D2C2] p-4 rounded-xl flex items-center justify-between transition-colors",
+      !readOnly && "hover:bg-[#DFDACB]/70"
+    )}>
       <div className="flex items-center gap-4">
         {/* Иконка-заглушка */}
         <div className="w-10 h-10 rounded-lg bg-[#D4CEBF] border border-[#C5BEAE] flex items-center justify-center font-mono text-xs text-zinc-600">
@@ -59,7 +64,17 @@ export const MealRow: React.FC<Props> = ({ meal, onToggleComplete }) => {
         <div className="font-mono font-bold text-sm text-zinc-900">{meal.calories}</div>
         <Checkbox
           checked={meal.isCompleted}
-          onChange={() => onToggleComplete?.(meal.id)}
+          onChange={() => {
+            if (!readOnly) {
+              onToggleComplete?.(meal.id);
+            }
+          }}
+          disabled={readOnly}
+          className={
+            readOnly
+              ? "!opacity-100 !cursor-default pointer-events-none"
+              : undefined
+          }
         />
       </div>
     </div>

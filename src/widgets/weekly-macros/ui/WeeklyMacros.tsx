@@ -18,6 +18,7 @@ interface Props {
   subtitle?: string;
   onRegenerate?: (reason: string) => void;
   isRegenerating?: boolean;
+  showRegenerate?: boolean;
 }
 
 export const WeeklyMacros: React.FC<Props> = ({
@@ -29,6 +30,7 @@ export const WeeklyMacros: React.FC<Props> = ({
   subtitle,
   onRegenerate,
   isRegenerating,
+  showRegenerate = true,
 }) => {
   const [isReasonOpen, setIsReasonOpen] = useState(false);
   const [reason, setReason] = useState("");
@@ -79,17 +81,18 @@ export const WeeklyMacros: React.FC<Props> = ({
             <p className="text-xs text-zinc-500 font-mono mt-0.5">{subtitle}</p>
           )}
         </div>
-
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setIsReasonOpen((open) => !open)}
-            disabled={isRegenerating}
-          >
-            {isRegenerating ? "Генерація…" : "⟳ Перегенерувати"}
-          </Button>
-        </div>
+        {showRegenerate && (
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsReasonOpen((open) => !open)}
+              disabled={isRegenerating}
+            >
+              {isRegenerating ? "Генерація…" : "⟳ Перегенерувати"}
+            </Button>
+          </div>
+        )}
       </div>
 
       {isReasonOpen && (
