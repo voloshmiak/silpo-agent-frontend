@@ -5,6 +5,8 @@ export interface PlanRecord {
   user_id: string;
   title: string;
   content: string;
+  week_number?: number;
+  week_start_date?: string;
   created_at: string;
 }
 

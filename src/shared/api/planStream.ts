@@ -17,6 +17,8 @@ export interface PlanStreamParams {
   fridge?: string;
   /** Минулий план, який агент адаптує замість генерації з нуля */
   planId?: string;
+  /** Whether the agent should apply selected products to the real Silpo cart. */
+  apply?: boolean;
 }
 
 export type PlanMealSlot = "breakfast" | "lunch" | "snack" | "dinner";
@@ -238,6 +240,7 @@ function buildQuery(params: PlanStreamParams): string {
   if (params.note) search.set("note", params.note);
   if (params.fridge) search.set("fridge", params.fridge);
   if (params.planId) search.set("plan_id", params.planId);
+  if (params.apply !== undefined) search.set("apply", String(params.apply));
   return search.toString();
 }
 

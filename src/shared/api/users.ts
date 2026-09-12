@@ -30,12 +30,11 @@ export async function loginUser(email: string, password: string): Promise<Backen
 }
 
 export async function changePassword(
-  oldPassword: string,
   newPassword: string
 ): Promise<{ status: string; message?: string }> {
   return apiClient<{ status: string; message?: string }>("/users/me/password", {
     method: "PUT",
-    body: JSON.stringify({ old_password: oldPassword, new_password: newPassword }),
+    body: JSON.stringify({ new_password: newPassword }),
   });
 }
 

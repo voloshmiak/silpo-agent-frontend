@@ -1,210 +1,77 @@
-import React, { useState } from "react";
-import { Card, Badge, Button } from "@/shared/ui";
-import { mockWeightHistory, mockBudgetHistory } from "@/entities/metric";
-
-/**
- * Обидва графіки цього віджета намальовані на вигаданих числах: історії ваги
- * та витрат бекенд поки не зберігає. Позначка стоїть на кожній картці, щоб
- * ніхто не звіряв із ними реальний прогрес — прибрати її можна тоді ж, коли
- * зʼявиться API.
- */
-const DemoMark: React.FC = () => (
-  <span className="text-[9px] font-mono font-bold uppercase tracking-wider text-[#FF5C00] border border-[#FF5C00]/50 rounded px-1.5 py-0.5">
-    Демо
-  </span>
-);
+import React, { useEffect, useMemo, useState } from "react";
+import { Badge, Button, Card, PageError } from "@/shared/ui";
+import { downloadProgressCsv, getProgress, type ProgressData } from "@/shared/api";
 
 export const ArchiveAnalytics: React.FC = () => {
   const [period, setPeriod] = useState<"4" | "12" | "all">("12");
+  const [data, setData] = useState<ProgressData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
 
-  // Расчет точек SVG для графика веса (min 74, max 84)
-  const minW = 74;
-  const maxW = 84;
-  const getY = (val: number) => 140 - ((val - minW) / (maxW - minW)) * 110;
-  const getX = (idx: number, total: number) => 30 + (idx / (total - 1)) * 360;
+  useEffect(() => {
+    let cancelled = false;
+    getProgress(period)
+      .then((result) => { if (!cancelled) setData(result); })
+      .catch((err: unknown) => { if (!cancelled) setError(err instanceof Error ? err.message : "Не вдалося завантажити прогрес"); })
+      .finally(() => { if (!cancelled) setIsLoading(false); });
+    return () => { cancelled = true; };
+  }, [period, reloadKey]);
+  const points = useMemo(() => (data ? [...data.weight.history, ...data.weight.forecast] : []), [data]);
 
-  const actualPoints = mockWeightHistory.filter((p) => !p.isForecast);
-  const forecastPoints = mockWeightHistory.filter(
-    (_, i) => i >= actualPoints.length - 1
-  );
+  if (isLoading || error || !data) {
+    return error ? <PageError message={error} onRetry={() => setReloadKey((value) => value + 1)} /> : <div className="h-64 rounded-xl bg-[#ECE8DC] animate-pulse" />;
+  }
 
-  const actualSvgPath = actualPoints
-    .map((p, i) => `${i === 0 ? "M" : "L"} ${getX(i, mockWeightHistory.length)} ${getY(p.weightKg)}`)
-    .join(" ");
-
-  const forecastSvgPath = forecastPoints
-    .map((p, i) => {
-      const globalIdx = actualPoints.length - 1 + i;
-      return `${i === 0 ? "M" : "L"} ${getX(globalIdx, mockWeightHistory.length)} ${getY(p.weightKg)}`;
-    })
-    .join(" ");
+  const minWeight = Math.min(...points.map((point) => point.weight)) - 1;
+  const maxWeight = Math.max(...points.map((point) => point.weight)) + 1;
+  const x = (index: number) => 30 + (index / Math.max(1, points.length - 1)) * 360;
+  const y = (weight: number) => 140 - ((weight - minWeight) / Math.max(1, maxWeight - minWeight)) * 110;
+  const actualPath = data.weight.history.map((point, index) => `${index === 0 ? "M" : "L"} ${x(index)} ${y(point.weight)}`).join(" ");
+  const forecastPoints = [data.weight.history.at(-1), ...data.weight.forecast].filter(Boolean);
+  const forecastPath = forecastPoints.map((point, index) => `${index === 0 ? "M" : "L"} ${x(data.weight.history.length - 1 + index)} ${y(point!.weight)}`).join(" ");
+  const maxSpend = Math.max(data.expenses.weekly_limit, ...data.expenses.items.map((item) => item.total_cost), 1);
 
   return (
     <div className="space-y-6">
-      {/* Шапка экрана Архив */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-black font-mono tracking-tight uppercase text-zinc-900">
-            Архів та Прогрес
-          </h1>
-          <p className="text-xs text-[#FF5C00] font-mono font-bold mt-1">
-            Обидва графіки — демонстраційні: історію ваги й витрат бекенд поки не зберігає
-          </p>
+          <h1 className="text-3xl font-black font-mono tracking-tight uppercase text-zinc-900">Архів та Прогрес</h1>
+          <p className="text-xs text-zinc-500 font-mono mt-1">Реальні дані вашої ваги та витрат</p>
         </div>
-
         <div className="flex items-center gap-2">
           <div className="flex bg-[#DFDACB] p-1 rounded-xl border border-[#D8D2C2]">
-            {(["4", "12", "all"] as const).map((p) => (
-              <button
-                key={p}
-                onClick={() => setPeriod(p)}
-                className={`px-3 py-1 rounded-lg font-mono text-xs font-bold transition-all cursor-pointer ${
-                  period === p
-                    ? "bg-[#D2F832] text-black border border-black shadow-sm"
-                    : "text-zinc-600 hover:text-zinc-950"
-                }`}
-              >
-                {p === "all" ? "Все" : `${p} тиж`}
+            {(["4", "12", "all"] as const).map((value) => (
+              <button key={value} type="button" onClick={() => setPeriod(value)} className={`px-3 py-1 rounded-lg font-mono text-xs font-bold ${period === value ? "bg-[#D2F832] text-black border border-black" : "text-zinc-600"}`}>
+                {value === "all" ? "Все" : `${value} тиж`}
               </button>
             ))}
           </div>
-
-          <Button variant="outline" size="sm">
-            ⤓ Експорт CSV
-          </Button>
+          <Button variant="outline" size="sm" onClick={() => void downloadProgressCsv()}>↓ Експорт CSV</Button>
         </div>
       </div>
 
-      {/* Сетка графиков */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* 1. График динамики веса */}
-        <Card className="p-6 flex flex-col justify-between">
+        <Card className="p-6 space-y-4">
           <div>
-            <div className="flex justify-between items-start">
-              <div>
-                <span className="text-[10px] font-mono uppercase text-zinc-500 font-bold tracking-wider flex items-center gap-2">
-                  Динаміка ваги
-                  <DemoMark />
-                </span>
-                <div className="flex items-baseline gap-2 mt-1">
-                  <span className="text-3xl font-mono font-black text-zinc-900">
-                    78,4 кг
-                  </span>
-                  <Badge variant="lime">-3,7 кг за 12 тиж</Badge>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 text-[10px] font-mono text-zinc-500">
-                <span className="flex items-center gap-1">
-                  <span className="w-2.5 h-0.5 bg-black inline-block" /> факт
-                </span>
-                <span className="flex items-center gap-1">
-                  <span className="w-2.5 h-0.5 border-b border-dashed border-zinc-500 inline-block" /> прогноз
-                </span>
-              </div>
-            </div>
-
-            {/* SVG график */}
-            <div className="mt-4 w-full overflow-x-auto">
-              <svg viewBox="0 0 420 160" className="w-full h-40">
-                {/* Горизонтальные сетки */}
-                <line x1="20" y1="30" x2="400" y2="30" stroke="#D8D2C2" strokeDasharray="3 3" />
-                <line x1="20" y1="85" x2="400" y2="85" stroke="#D8D2C2" strokeDasharray="3 3" />
-                <line x1="20" y1="140" x2="400" y2="140" stroke="#D8D2C2" />
-
-                {/* Линии факта и прогноза */}
-                <path d={actualSvgPath} fill="none" stroke="#18181b" strokeWidth="2.5" />
-                <path d={forecastSvgPath} fill="none" stroke="#71717a" strokeWidth="2" strokeDasharray="4 4" />
-
-                {/* Точки данных */}
-                {mockWeightHistory.map((p, idx) => {
-                  const cx = getX(idx, mockWeightHistory.length);
-                  const cy = getY(p.weightKg);
-                  return (
-                    <g key={p.week}>
-                      <circle
-                        cx={cx}
-                        cy={cy}
-                        r={p.isForecast ? 3.5 : 4.5}
-                        className={p.isForecast ? "fill-[#ECE8DC] stroke-zinc-500" : "fill-[#D2F832] stroke-black"}
-                        strokeWidth="2"
-                      />
-                      <text
-                        x={cx}
-                        y="155"
-                        textAnchor="middle"
-                        className="text-[10px] font-mono fill-zinc-500 font-bold"
-                      >
-                        {p.week}
-                      </text>
-                    </g>
-                  );
-                })}
-              </svg>
-            </div>
+            <span className="text-[10px] font-mono uppercase text-zinc-500 font-bold tracking-wider">Динаміка ваги</span>
+            <div className="flex items-baseline gap-2 mt-1"><span className="text-3xl font-mono font-black">{data.weight.current_weight.toLocaleString("uk-UA")} кг</span><Badge variant="lime">{data.weight.change_kg > 0 ? "+" : ""}{data.weight.change_kg} кг за {data.weight.period_weeks} тиж</Badge></div>
           </div>
-
-          <div className="pt-3 border-t border-[#D8D2C2] flex justify-between text-xs font-mono text-zinc-500">
-            <span>Старт: 82,1 кг</span>
-            <span>Ціль: 75,0 кг</span>
-          </div>
+          <svg viewBox="0 0 420 160" className="w-full h-40" aria-label="Графік динаміки ваги">
+            <line x1="20" y1="30" x2="400" y2="30" stroke="#D8D2C2" strokeDasharray="3 3" />
+            <line x1="20" y1="85" x2="400" y2="85" stroke="#D8D2C2" strokeDasharray="3 3" />
+            <line x1="20" y1="140" x2="400" y2="140" stroke="#D8D2C2" />
+            <path d={actualPath} fill="none" stroke="#18181b" strokeWidth="2.5" />
+            <path d={forecastPath} fill="none" stroke="#71717a" strokeWidth="2" strokeDasharray="4 4" />
+            {points.map((point, index) => <circle key={`${point.date}-${index}`} cx={x(index)} cy={y(point.weight)} r={point.is_forecast ? 3.5 : 4.5} className={point.is_forecast ? "fill-[#ECE8DC] stroke-zinc-500" : "fill-[#D2F832] stroke-black"} strokeWidth="2" />)}
+          </svg>
+          <div className="pt-3 border-t border-[#D8D2C2] flex justify-between text-xs font-mono text-zinc-500"><span>Старт: {data.weight.start_weight} кг</span><span>Ціль: {data.weight.target_weight} кг</span></div>
         </Card>
 
-        {/* 2. Столбчатая диаграмма расходов */}
-        <Card className="p-6 flex flex-col justify-between">
-          <div>
-            <div className="flex justify-between items-start">
-              <div>
-                <span className="text-[10px] font-mono uppercase text-zinc-500 font-bold tracking-wider flex items-center gap-2">
-                  Витрати на їжу по тижнях
-                  <DemoMark />
-                </span>
-                <div className="flex items-baseline gap-2 mt-1">
-                  <span className="text-3xl font-mono font-black text-zinc-900">
-                    1 850 ₴
-                  </span>
-                  <span className="text-xs font-mono text-zinc-500">сер. чек / тижд</span>
-                </div>
-              </div>
-              <Badge variant="outline">Ліміт 2 000 ₴</Badge>
-            </div>
-
-            {/* Столбики расходов */}
-            <div className="mt-6 flex items-end justify-between h-32 px-2 border-b border-[#D8D2C2]">
-              {mockBudgetHistory.map((b) => {
-                const maxBarHeight = 110;
-                const height = (b.actual / 2300) * maxBarHeight;
-                const isOver = b.actual > b.limit;
-
-                return (
-                  <div key={b.week} className="flex flex-col items-center gap-1.5 group relative">
-                    {/* Тултип со значением */}
-                    <span className="opacity-0 group-hover:opacity-100 transition-opacity absolute -top-6 text-[9px] font-mono bg-black text-white px-1.5 py-0.5 rounded pointer-events-none">
-                      {b.actual} ₴
-                    </span>
-
-                    <div
-                      style={{ height: `${height}px` }}
-                      className={`w-6 sm:w-8 rounded-t-md transition-all ${
-                        isOver
-                          ? "bg-[#FF5C00]"
-                          : b.week === "T12"
-                          ? "bg-[#D2F832] border border-black"
-                          : "bg-[#DFDACB] hover:bg-[#D4CEBF]"
-                      }`}
-                    />
-                    <span className="text-[10px] font-mono text-zinc-500 font-bold mt-1">
-                      {b.week}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="pt-3 border-t border-[#D8D2C2] flex justify-between text-xs font-mono text-zinc-500">
-            <span>В межах ліміту: 7 з 8 тиж</span>
-            <span className="text-[#FF5C00] font-bold">1 перевитрата (Т6)</span>
-          </div>
+        <Card className="p-6 space-y-4">
+          <div className="flex justify-between items-start"><div><span className="text-[10px] font-mono uppercase text-zinc-500 font-bold tracking-wider">Витрати на їжу по тижнях</span><div className="text-3xl font-mono font-black mt-1">{data.expenses.average_spend.toLocaleString("uk-UA")} ₴</div><span className="text-xs font-mono text-zinc-500">сер. чек / тижд</span></div><Badge variant="outline">Ліміт {data.expenses.weekly_limit.toLocaleString("uk-UA")} ₴</Badge></div>
+          <div className="mt-6 flex items-end justify-between h-32 px-2 border-b border-[#D8D2C2]">{data.expenses.items.map((item) => <div key={item.id} className="flex flex-col items-center gap-1.5 group relative"><span className="opacity-0 group-hover:opacity-100 absolute -top-6 text-[9px] font-mono bg-black text-white px-1.5 py-0.5 rounded">{item.total_cost} ₴</span><div style={{ height: `${(item.total_cost / maxSpend) * 110}px` }} className={`w-6 sm:w-8 rounded-t-md ${item.is_overspent ? "bg-[#FF5C00]" : "bg-[#DFDACB]"}`} /><span className="text-[10px] font-mono text-zinc-500 font-bold">{item.week_label}</span></div>)}</div>
+          <div className="pt-3 border-t border-[#D8D2C2] flex justify-between text-xs font-mono text-zinc-500"><span>В межах ліміту: {data.expenses.weeks_within_limit} з {data.expenses.total_weeks} тиж</span><span className="text-[#FF5C00] font-bold">{data.expenses.overspent_count} перевитрата</span></div>
         </Card>
       </div>
     </div>

@@ -21,7 +21,7 @@ export const usePlanGeneration = () => {
     setError(null);
 
     try {
-      const plan = await streamPlan(params, {
+      const plan = await streamPlan({ apply: true, ...params }, {
         onToolCall: (event) => setCurrentStep(formatToolLabel(event.tool)),
         onToolResult: (event) => {
           // finalize_plan — останній виклик у прогоні: далі модель дописує

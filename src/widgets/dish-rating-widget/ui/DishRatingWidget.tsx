@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Card, Badge } from "@/shared/ui";
 import { DishRatingGroup, type RatingScore } from "@/features/rate-dish";
 import { FeedbackTagsSelector } from "@/features/select-feedback-tags";
+import { saveFeedback } from "@/shared/api";
 
 export interface MealFeedbackItem {
   id: string;
@@ -22,11 +23,15 @@ const availableTagsList = [
 interface Props {
   meals: MealFeedbackItem[];
   weekLabel: string;
+  planId: string;
 }
 
-export const DishRatingWidget: React.FC<Props> = ({ meals, weekLabel }) => {
+export const DishRatingWidget: React.FC<Props> = ({ meals, weekLabel, planId }) => {
   const [ratings, setRatings] = useState<Record<string, RatingScore>>({});
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleRatingChange = (id: string, score: RatingScore) => {
     setRatings((prev) => ({ ...prev, [id]: score }));
@@ -36,6 +41,30 @@ export const DishRatingWidget: React.FC<Props> = ({ meals, weekLabel }) => {
     setSelectedTags((prev) =>
       prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
     );
+  };
+
+  const handleSave = async () => {
+    setError(null);
+    setIsSaving(true);
+    try {
+      await saveFeedback({
+        plan_id: planId,
+        dish_ratings: meals
+          .filter((meal) => ratings[meal.id])
+          .map((meal) => ({
+            id: meal.id,
+            title: meal.title,
+            cookedTimes: meal.cookedTimes,
+            rating: ratings[meal.id] === "good" ? "good" : "bad",
+          })),
+        tags: selectedTags,
+      });
+      setSaved(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Не вдалося зберегти фідбек");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -88,6 +117,13 @@ export const DishRatingWidget: React.FC<Props> = ({ meals, weekLabel }) => {
           selectedTags={selectedTags}
           onToggleTag={handleToggleTag}
         />
+      </div>
+      <div className="pt-4 border-t border-[#D8D2C2] flex items-center justify-between gap-3">
+        {error && <p className="text-xs text-[#FF5C00] font-semibold">{error}</p>}
+        {saved && !error && <p className="text-xs text-[#2E7D32] font-semibold">Фідбек збережено</p>}
+        <button type="button" onClick={handleSave} disabled={isSaving || Object.keys(ratings).length === 0} className="ml-auto rounded-lg border border-black bg-[#D2F832] px-4 py-2 text-[11px] font-mono font-bold uppercase disabled:opacity-50">
+          {isSaving ? "Збереження..." : "Зберегти фідбек"}
+        </button>
       </div>
     </Card>
   );

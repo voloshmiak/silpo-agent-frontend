@@ -87,7 +87,7 @@ export const FeedbackPage: React.FC = () => {
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
           <div className="lg:col-span-2">
-            <DishRatingWidget meals={meals} weekLabel={weekLabel(record)} />
+            <DishRatingWidget meals={meals} weekLabel={weekLabel(record)} planId={record?.id ?? ""} />
           </div>
 
           <div className="lg:col-span-1">

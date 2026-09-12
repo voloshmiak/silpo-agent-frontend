@@ -11,7 +11,6 @@ import { PageError } from "@/shared/ui";
 import { ProfileSkeleton } from "./ProfileSkeleton";
 
 export const ProfilePage: React.FC = () => {
-  const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [passwordConfirmation, setPasswordConfirmation] = useState("");
   const [passwordMessage, setPasswordMessage] = useState<string | null>(null);
@@ -52,8 +51,8 @@ export const ProfilePage: React.FC = () => {
     event.preventDefault();
     setPasswordMessage(null);
     setPasswordError(null);
-    if (newPassword.length < 8) {
-      setPasswordError("Новий пароль має містити щонайменше 8 символів");
+    if (newPassword.length < 6) {
+      setPasswordError("Новий пароль має містити щонайменше 6 символів");
       return;
     }
     if (newPassword !== passwordConfirmation) {
@@ -62,9 +61,8 @@ export const ProfilePage: React.FC = () => {
     }
     setIsChangingPassword(true);
     try {
-      const result = await changePassword(oldPassword, newPassword);
+      const result = await changePassword(newPassword);
       setPasswordMessage(result.message ?? "Пароль успішно оновлено");
-      setOldPassword("");
       setNewPassword("");
       setPasswordConfirmation("");
     } catch (err) {
@@ -143,7 +141,6 @@ export const ProfilePage: React.FC = () => {
             <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-400">Email · пароль</span>
           </div>
           <form className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end" onSubmit={handlePasswordChange}>
-            <input aria-label="Поточний пароль" type="password" required value={oldPassword} onChange={(event) => setOldPassword(event.target.value)} placeholder="Поточний пароль" className="w-full h-10 px-3 rounded-lg border border-[#D8D2C2] bg-[#E5E0D3]/40 text-sm outline-none focus:border-zinc-500" />
             <input aria-label="Новий пароль" type="password" required value={newPassword} onChange={(event) => setNewPassword(event.target.value)} placeholder="Новий пароль" className="w-full h-10 px-3 rounded-lg border border-[#D8D2C2] bg-[#E5E0D3]/40 text-sm outline-none focus:border-zinc-500" />
             <input aria-label="Підтвердження нового пароля" type="password" required value={passwordConfirmation} onChange={(event) => setPasswordConfirmation(event.target.value)} placeholder="Повторіть новий пароль" className="w-full h-10 px-3 rounded-lg border border-[#D8D2C2] bg-[#E5E0D3]/40 text-sm outline-none focus:border-zinc-500" />
             <button type="submit" disabled={isChangingPassword} className="h-10 px-4 rounded-md bg-[#D2F832] border border-black text-black text-xs font-bold uppercase tracking-wider disabled:opacity-50">
