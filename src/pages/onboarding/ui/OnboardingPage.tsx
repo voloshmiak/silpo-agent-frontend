@@ -29,7 +29,6 @@ export const OnboardingPage: React.FC<Props> = ({
   const { step, data, update, goNext, goBack, canProceed, isLastStep } = useOnboardingForm();
   const { status, currentStep, generate, error } = usePlanGeneration();
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [generatedPassword, setGeneratedPassword] = useState<string | undefined>();
 
   const isSubmitting = status === "streaming";
 
@@ -45,8 +44,7 @@ export const OnboardingPage: React.FC<Props> = ({
       onGenerationStarted();
 
       // 1. Створюємо юзера та записуємо JWT
-      const registration = await registerUser(userName, data.email.trim(), data.silpoAccessToken);
-      setGeneratedPassword(registration.generated_password);
+      await registerUser(userName, data.email.trim(), data.silpoAccessToken);
 
       // 2. Зберігаємо параметри та обмеження — усі 4 блоки екрана профілю
       //    (зріст і вага теж живуть тут, окремого PUT /users/me більше немає)
@@ -95,7 +93,7 @@ export const OnboardingPage: React.FC<Props> = ({
   if (isSubmitting) {
     return (
       <div className="min-h-screen bg-[#F4F1E8] text-zinc-900 flex items-center justify-center font-sans p-6">
-        <PlanGenerationLoader step={currentStep} generatedPassword={generatedPassword} />
+        <PlanGenerationLoader step={currentStep} />
       </div>
     );
   }
