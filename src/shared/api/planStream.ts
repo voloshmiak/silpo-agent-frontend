@@ -19,8 +19,12 @@ export interface PlanStreamParams {
   planId?: string;
   /** Whether the agent should apply selected products to the real Silpo cart. */
   apply?: boolean;
-  /** На який тиждень записати план; `next` — з наступного понеділка. Бекенд за замовчуванням бере `current` */
-  week?: "current" | "next";
+  /**
+   * Понеділок тижня плану, YYYY-MM-DD: поточний або наступний. Саме дата, а не
+   * «наступний»: вкладка, відкрита в неділю й відправлена в понеділок, інакше
+   * записала б план на тиждень пізніше. Без неї бекенд бере поточний тиждень.
+   */
+  weekStart?: string;
 }
 
 export type PlanMealSlot = "breakfast" | "lunch" | "snack" | "dinner";
@@ -243,7 +247,7 @@ function buildQuery(params: PlanStreamParams): string {
   if (params.fridge) search.set("fridge", params.fridge);
   if (params.planId) search.set("plan_id", params.planId);
   if (params.apply !== undefined) search.set("apply", String(params.apply));
-  if (params.week) search.set("week", params.week);
+  if (params.weekStart) search.set("week_start", params.weekStart);
   return search.toString();
 }
 

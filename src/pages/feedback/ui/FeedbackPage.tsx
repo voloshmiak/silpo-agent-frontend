@@ -123,11 +123,11 @@ export const FeedbackPage: React.FC = () => {
       const nextPlan = await generate({
         note: note.trim() || undefined,
         fridge: fridge.trim() || undefined,
-        week: nextWeek?.week,
+        weekStart: nextWeek?.weekStart,
       });
       // Тиждень передаємо разом із планом: без запису з бекенду «Тиждень» інакше
       // перегенерував би план наступного тижня як поточний
-      navigate("/week", { state: { plan: nextPlan, week: nextWeek?.week } });
+      navigate("/week", { state: { plan: nextPlan, weekStart: nextWeek?.weekStart } });
     } catch {
       // помилка вже лежить у generateError хука і показується у віджеті
     }

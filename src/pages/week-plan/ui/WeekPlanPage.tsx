@@ -13,9 +13,8 @@ import {
   planDayToMacros,
   planDayToMeals,
   planToCartData,
-  planWeekTarget,
+  planWeekStart,
   type PlanData,
-  type PlanWeekTarget,
 } from "@/entities/plan";
 import { usePlanGeneration } from "@/features/generate-plan";
 import { PlanGenerationLoader } from "@/features/generate-plan/ui/PlanGenerationLoader";
@@ -23,11 +22,11 @@ import { WeekPlanSkeleton } from "./WeekPlanSkeleton";
 
 interface Props {
   initialPlan?: PlanData | null;
-  /** Тиждень `initialPlan` — щоб перегенерація лягла на нього ж */
-  initialWeek?: PlanWeekTarget;
+  /** Понеділок тижня `initialPlan`, YYYY-MM-DD — щоб перегенерація лягла на нього ж */
+  initialWeekStart?: string;
 }
 
-export const WeekPlanPage: React.FC<Props> = ({ initialPlan, initialWeek }) => {
+export const WeekPlanPage: React.FC<Props> = ({ initialPlan, initialWeekStart }) => {
   const { profile } = useUserProfile();
 
   // План щойно з онбордингу вже на руках — тоді запит за останнім зайвий.
@@ -95,7 +94,7 @@ export const WeekPlanPage: React.FC<Props> = ({ initialPlan, initialWeek }) => {
       const result = await generate({
         note: reason,
         planId: planRecord?.id,
-        week: planRecord ? planWeekTarget(planRecord) : initialWeek,
+        weekStart: planRecord ? planWeekStart(planRecord) : initialWeekStart,
       });
       setGeneratedPlan(result);
     } catch {

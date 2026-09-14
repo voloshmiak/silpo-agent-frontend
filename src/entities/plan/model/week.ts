@@ -1,6 +1,4 @@
-import type { PlanRecord, PlanStreamParams } from "@/shared/api";
-
-export type PlanWeekTarget = NonNullable<PlanStreamParams["week"]>;
+import type { PlanRecord } from "@/shared/api";
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -16,24 +14,29 @@ function planMonday(record: PlanRecord): number | null {
   return Number.isNaN(start.getTime()) ? null : utcMonday(start);
 }
 
+/** YYYY-MM-DD — формат `week_start` у `/plan/stream`. */
+function toIsoDate(ms: number): string {
+  return new Date(ms).toISOString().slice(0, 10);
+}
+
 /**
- * Тиждень, до якого належить уже збережений план, у термінах `/plan/stream`.
- * Перегенерація має лягти на той самий тиждень: план, складений у неділю на
- * наступний, інакше «переїхав» би на поточний.
+ * `week_start` для перегенерації збереженого плану, щоб новий ліг на той самий
+ * тиждень: план, складений у неділю на наступний, інакше «переїхав» би на
+ * поточний. Для плану з тижня, що вже минув, — undefined: такий тиждень бекенд
+ * спланувати не дасть, і план ляже на поточний.
  */
-export function planWeekTarget(record: PlanRecord, now = new Date()): PlanWeekTarget {
+export function planWeekStart(record: PlanRecord, now = new Date()): string | undefined {
   const monday = planMonday(record);
-  return monday !== null && monday > utcMonday(now) ? "next" : "current";
+  return monday !== null && monday >= utcMonday(now) ? toIsoDate(monday) : undefined;
 }
 
 /** Куди ляже наступний план і який номер тижня він отримає. */
 export interface NextWeekInfo {
   number: number;
-  week: PlanWeekTarget;
+  /** Понеділок тижня плану, YYYY-MM-DD — іде в `week_start` як є */
+  weekStart: string;
   /** Для цього тижня план уже є — новий стане ще одним планом того ж тижня */
   isUpdate: boolean;
-  /** Понеділок тижня плану, опівніч UTC */
-  startsOn: Date;
 }
 
 /**
@@ -41,6 +44,9 @@ export interface NextWeekInfo {
  * (або вже на наступний), будуємо наступний тиждень; якщо він старший —
  * поточний. Номер рахується так само, як `PlanRepo.NextWeekInfo` на бекенді:
  * той самий тиждень — той самий номер, тиждень одразу після — +1, інакше 1.
+ *
+ * Результат — конкретний понеділок, тож він лишається правдою й тоді, коли
+ * сторінку відкрили в неділю, а кнопку натиснули в понеділок.
  */
 export function predictNextWeek(record: PlanRecord | null, now = new Date()): NextWeekInfo | null {
   if (!record?.week_number) return null;
@@ -48,8 +54,7 @@ export function predictNextWeek(record: PlanRecord | null, now = new Date()): Ne
   if (lastMonday === null) return null;
 
   const thisMonday = utcMonday(now);
-  const week: PlanWeekTarget = lastMonday >= thisMonday ? "next" : "current";
-  const target = week === "next" ? thisMonday + WEEK_MS : thisMonday;
+  const target = lastMonday >= thisMonday ? thisMonday + WEEK_MS : thisMonday;
 
   const number =
     lastMonday === target
@@ -58,5 +63,5 @@ export function predictNextWeek(record: PlanRecord | null, now = new Date()): Ne
       ? record.week_number + 1
       : 1;
 
-  return { number, week, isUpdate: lastMonday === target, startsOn: new Date(target) };
+  return { number, weekStart: toIsoDate(target), isUpdate: lastMonday === target };
 }

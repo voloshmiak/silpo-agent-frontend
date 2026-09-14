@@ -2,8 +2,9 @@ import React from "react";
 import { Card, Button, Badge, FieldLabel, TextInput, TextArea } from "@/shared/ui";
 import type { NextWeekInfo } from "@/entities/plan";
 
-function formatMonday(date: Date): string {
-  return date.toLocaleDateString("uk-UA", { day: "numeric", month: "long", timeZone: "UTC" });
+/** YYYY-MM-DD → «14 вересня». Дата парситься як UTC, тож і форматуємо в UTC */
+function formatMonday(isoDate: string): string {
+  return new Date(isoDate).toLocaleDateString("uk-UA", { day: "numeric", month: "long", timeZone: "UTC" });
 }
 
 interface Props {
@@ -128,7 +129,7 @@ export const AgentDecisionWidget: React.FC<Props> = ({
       <div className="pt-4 border-t border-[#D8D2C2] space-y-2">
         {nextWeek && (
           <p className="text-[11px] text-zinc-600 leading-snug">
-            План на тиждень з {formatMonday(nextWeek.startsOn)}
+            План на тиждень з {formatMonday(nextWeek.weekStart)}
             {nextWeek.isUpdate && " — для нього вже є план, новий стане поточним"}.
           </p>
         )}

@@ -16,7 +16,7 @@ import { FeedbackPage } from "@/pages/feedback";
 import { OnboardingPage, WelcomePage } from "@/pages/onboarding";
 import { useAuthUser } from "@/entities/user";
 import { PreviousPlanPage } from "@/pages/previous-plan";
-import type { PlanData, PlanWeekTarget } from "@/entities/plan";
+import type { PlanData } from "@/entities/plan";
 import type { RegistrationResult } from "@/shared/api/users";
 
 export function App() {
@@ -147,9 +147,9 @@ function WelcomeRoute({ signIn }: { signIn: (email: string, password: string) =>
 
 function WeekRoute() {
   const location = useLocation();
-  const state = location.state as { plan?: PlanData; week?: PlanWeekTarget } | null;
+  const state = location.state as { plan?: PlanData; weekStart?: string } | null;
 
-  return <WeekPlanPage initialPlan={state?.plan ?? null} initialWeek={state?.week} />;
+  return <WeekPlanPage initialPlan={state?.plan ?? null} initialWeekStart={state?.weekStart} />;
 }
 
 export default App;
