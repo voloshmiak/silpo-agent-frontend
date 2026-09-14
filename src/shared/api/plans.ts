@@ -5,7 +5,9 @@ export interface PlanRecord {
   user_id: string;
   title: string;
   content: string;
+  /** Порядковий номер тижня; після пропущеного тижня рахунок починається з 1. */
   week_number?: number;
+  /** Понеділок календарного тижня плану, YYYY-MM-DD. */
   week_start_date?: string;
   created_at: string;
 }

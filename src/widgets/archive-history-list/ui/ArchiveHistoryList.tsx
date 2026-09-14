@@ -20,11 +20,13 @@ function buildPreview(plan: PlanData | null): string {
 
 /**
  * Заголовок план бекенд будує з тексту стріму; без token-подій туди потрапляє
- * сирий SSE-лог, тож такі заголовки підміняємо датою.
+ * сирий SSE-лог, тож такі заголовки підміняємо датою. Англійський префікс
+ * «Plan» відкидаємо — номер тижня вже стоїть у бейджі поруч.
  */
 function planTitle(title: string, createdAt: string): string {
   const looksLikeRawLog = title.includes("data:") || title.includes('{"type"');
-  if (title.trim() && !looksLikeRawLog) return title;
+  const cleaned = title.replace(/^\s*plan\b\s*/i, "").trim();
+  if (cleaned && !looksLikeRawLog) return cleaned;
   return `План від ${formatDate(createdAt)}`;
 }
 
@@ -66,7 +68,12 @@ export const ArchiveHistoryList: React.FC<Props> = ({ plans }) => {
                 className="py-3.5 flex flex-col md:flex-row md:items-center justify-between gap-3 hover:bg-[#DFDACB]/30 px-2 rounded-lg transition-colors"
               >
                 <div>
-                  <div className="text-xs font-bold text-zinc-900">
+                  <div className="flex items-center gap-2 text-xs font-bold text-zinc-900">
+                    {!!plan.week_number && (
+                      <Badge variant="lime" className="text-[10px] shrink-0">
+                        Тиждень {plan.week_number}
+                      </Badge>
+                    )}
                     {planTitle(plan.title, plan.created_at)}
                   </div>
                   <div className="text-[11px] font-mono text-zinc-500 mt-0.5">

@@ -1,9 +1,8 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Badge, Button, Card, PageError } from "@/shared/ui";
-import { downloadProgressCsv, getProgress, type ProgressData } from "@/shared/api";
+import { Badge, Card, PageError } from "@/shared/ui";
+import { getProgress, type ProgressData } from "@/shared/api";
 
 export const ArchiveAnalytics: React.FC = () => {
-  const [period, setPeriod] = useState<"4" | "12" | "all">("12");
   const [data, setData] = useState<ProgressData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -11,12 +10,12 @@ export const ArchiveAnalytics: React.FC = () => {
 
   useEffect(() => {
     let cancelled = false;
-    getProgress(period)
+    getProgress()
       .then((result) => { if (!cancelled) setData(result); })
       .catch((err: unknown) => { if (!cancelled) setError(err instanceof Error ? err.message : "Не вдалося завантажити прогрес"); })
       .finally(() => { if (!cancelled) setIsLoading(false); });
     return () => { cancelled = true; };
-  }, [period, reloadKey]);
+  }, [reloadKey]);
   const points = useMemo(() => (data ? [...data.weight.history, ...data.weight.forecast] : []), [data]);
 
   if (isLoading || error || !data) {
@@ -34,21 +33,9 @@ export const ArchiveAnalytics: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-black font-mono tracking-tight uppercase text-zinc-900">Архів та Прогрес</h1>
-          <p className="text-xs text-zinc-500 font-mono mt-1">Реальні дані вашої ваги та витрат</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="flex bg-[#DFDACB] p-1 rounded-xl border border-[#D8D2C2]">
-            {(["4", "12", "all"] as const).map((value) => (
-              <button key={value} type="button" onClick={() => setPeriod(value)} className={`px-3 py-1 rounded-lg font-mono text-xs font-bold ${period === value ? "bg-[#D2F832] text-black border border-black" : "text-zinc-600"}`}>
-                {value === "all" ? "Все" : `${value} тиж`}
-              </button>
-            ))}
-          </div>
-          <Button variant="outline" size="sm" onClick={() => void downloadProgressCsv()}>↓ Експорт CSV</Button>
-        </div>
+      <div>
+        <h1 className="text-3xl font-black font-mono tracking-tight uppercase text-zinc-900">Архів та Прогрес</h1>
+        <p className="text-xs text-zinc-500 font-mono mt-1">Реальні дані вашої ваги та витрат</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
