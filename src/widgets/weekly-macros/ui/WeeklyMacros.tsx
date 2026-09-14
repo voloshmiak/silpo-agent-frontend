@@ -72,9 +72,9 @@ export const WeeklyMacros: React.FC<Props> = ({
   return (
     <div className="space-y-6">
       {/* Верхний ряд: заголовок недели и вспомогательные кнопки */}
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-3xl font-black font-mono tracking-tight uppercase text-zinc-900">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-2xl sm:text-3xl font-black font-mono tracking-tight uppercase text-zinc-900">
             {title}
           </h1>
           {subtitle && (
@@ -82,7 +82,7 @@ export const WeeklyMacros: React.FC<Props> = ({
           )}
         </div>
         {showRegenerate && (
-          <div className="flex gap-2">
+          <div className="flex gap-2 shrink-0">
             <Button
               variant="outline"
               size="sm"
@@ -117,7 +117,7 @@ export const WeeklyMacros: React.FC<Props> = ({
       )}
 
       {/* Селектор дней недели */}
-      <div className="grid grid-cols-7 gap-2">
+      <div className="grid grid-cols-7 gap-1 sm:gap-2">
         {days.map((item) => {
           const isSelected = activeDay === item.key;
           return (
@@ -125,15 +125,15 @@ export const WeeklyMacros: React.FC<Props> = ({
               key={item.key}
               type="button"
               onClick={() => onDayChange(item.key)}
-              className={`p-3 rounded-xl border flex flex-col items-center justify-center transition-all cursor-pointer ${
+              className={`p-1.5 sm:p-3 rounded-lg sm:rounded-xl border flex flex-col items-center justify-center min-w-0 transition-all cursor-pointer ${
                 isSelected
                   ? "bg-[#D2F832] border-black text-black shadow-sm scale-[1.02]"
                   : "bg-[#ECE8DC] border-[#D8D2C2] text-zinc-700 hover:border-zinc-400"
               }`}
             >
-              <span className="text-xs font-mono font-black">{item.label}</span>
-              <span className="font-mono font-bold text-sm mt-0.5">{item.kcal}</span>
-              <span className="text-[8px] font-mono tracking-tight text-zinc-500 uppercase mt-0.5">
+              <span className="text-[10px] sm:text-xs font-mono font-black">{item.label}</span>
+              <span className="font-mono font-bold text-xs sm:text-sm mt-0.5">{item.kcal}</span>
+              <span className="hidden sm:block text-[8px] font-mono tracking-tight text-zinc-500 uppercase mt-0.5 truncate max-w-full">
                 {item.note}
               </span>
             </button>

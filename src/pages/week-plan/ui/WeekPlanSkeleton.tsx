@@ -1,11 +1,11 @@
 import React from "react";
 
 export const WeekPlanSkeleton: React.FC = () => (
-  <div className="max-w-6xl w-full mx-auto p-8 space-y-6 skeleton-sweep" aria-busy="true">
+  <div className="max-w-6xl w-full mx-auto p-4 sm:p-8 space-y-6 skeleton-sweep" aria-busy="true">
     <span className="sr-only">Завантажуємо план тижня…</span>
 
     {/* Заголовок тижня та кнопки */}
-    <div className="flex items-start justify-between">
+    <div className="flex flex-wrap items-start justify-between gap-3">
       <div className="space-y-2">
         <div className="skeleton-block h-8 w-48" />
         <div className="skeleton-block h-3 w-72" />
@@ -17,9 +17,9 @@ export const WeekPlanSkeleton: React.FC = () => (
     </div>
 
     {/* Селектор днів */}
-    <div className="grid grid-cols-7 gap-2">
+    <div className="grid grid-cols-7 gap-1 sm:gap-2">
       {Array.from({ length: 7 }).map((_, idx) => (
-        <div key={idx} className="skeleton-block h-[72px]" />
+        <div key={idx} className="skeleton-block h-[52px] sm:h-[72px]" />
       ))}
     </div>
 

@@ -23,20 +23,20 @@ function getInitials(name: string): string {
 
 export const Header: React.FC<HeaderProps> = ({ onLogout, userName = "" }) => {
   return (
-    <header className="w-full bg-[#F4F1E8] border-b border-[#D8D2C2] px-8 py-3.5 flex items-center justify-between">
+    <header className="w-full bg-[#F4F1E8] border-b border-[#D8D2C2] px-4 sm:px-8 py-3 sm:py-3.5 flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
       {/* Левая часть: логотип и навигация */}
-      <div className="flex items-center gap-10">
-        <span className="font-mono tracking-[0.25em] text-sm font-semibold uppercase text-zinc-900">
+      <div className="flex flex-wrap items-center gap-4 sm:gap-10 min-w-0 max-w-full">
+        <span className="shrink-0 font-mono tracking-[0.25em] text-sm font-semibold uppercase text-zinc-900">
           SILPOFIT
         </span>
 
-        <nav className="flex items-center gap-7">
+        <nav className="flex items-center gap-3 sm:gap-7 shrink-0">
           {NAV_ITEMS.map((item) => (
             <NavLink
               key={item.path}
               to={item.path}
               className={({ isActive }) =>
-                `relative pb-1 text-sm transition-colors ${
+                `relative pb-1 whitespace-nowrap text-xs sm:text-sm transition-colors ${
                   isActive
                     ? "font-bold text-zinc-900"
                     : "font-medium text-zinc-500 hover:text-zinc-900"
@@ -57,17 +57,17 @@ export const Header: React.FC<HeaderProps> = ({ onLogout, userName = "" }) => {
       </div>
 
       {/* Правая часть: аватар и выход */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 sm:gap-3 shrink-0">
         <div
           title={userName || undefined}
-          className="w-8 h-8 rounded bg-zinc-900 text-[#F4F1E8] font-mono text-xs flex items-center justify-center font-bold"
+          className="w-7 h-7 sm:w-8 sm:h-8 rounded bg-zinc-900 text-[#F4F1E8] font-mono text-xs flex items-center justify-center font-bold shrink-0"
         >
           {getInitials(userName)}
         </div>
         <button
           type="button"
           onClick={onLogout}
-          className="px-3 py-1.5 rounded-md border border-[#D8D2C2] text-[10px] font-mono font-bold uppercase tracking-wider text-zinc-600 hover:border-zinc-400 hover:text-zinc-900 transition-colors cursor-pointer"
+          className="px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-md border border-[#D8D2C2] text-[10px] font-mono font-bold uppercase tracking-wider text-zinc-600 hover:border-zinc-400 hover:text-zinc-900 transition-colors cursor-pointer whitespace-nowrap"
         >
           Вийти
         </button>
