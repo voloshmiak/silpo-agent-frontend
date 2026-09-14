@@ -5,7 +5,8 @@ export interface FeedbackDishRating {
   title: string;
   cookedTimes: number;
   timeMinutes?: number;
-  rating: "good" | "bad";
+  /** Для core: good → 5, neutral → 3, bad → 1 */
+  rating: "good" | "neutral" | "bad";
 }
 
 export interface FeedbackRecord {
