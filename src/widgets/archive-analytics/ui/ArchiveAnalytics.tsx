@@ -17,8 +17,26 @@ export const ArchiveAnalytics: React.FC = () => {
     return () => { cancelled = true; };
   }, [reloadKey]);
   const points = useMemo(() => (data ? [...data.weight.history, ...data.weight.forecast] : []), [data]);
+  // На один тиждень може бути кілька планів — у витрати йде лише останній
+  const expenses = useMemo(() => {
+    if (!data) return null;
+    const latestByWeek = new Map<string, ProgressData["expenses"]["items"][number]>();
+    for (const item of data.expenses.items) {
+      const key = item.week_number ? String(item.week_number) : item.week_label;
+      const current = latestByWeek.get(key);
+      if (!current || new Date(item.date).getTime() >= new Date(current.date).getTime()) latestByWeek.set(key, item);
+    }
+    const items = [...latestByWeek.values()].sort((a, b) => a.week_number - b.week_number || new Date(a.date).getTime() - new Date(b.date).getTime());
+    const overspentCount = items.filter((item) => item.is_overspent).length;
+    return {
+      items,
+      averageSpend: items.length ? Math.round(items.reduce((sum, item) => sum + item.total_cost, 0) / items.length) : 0,
+      weeksWithinLimit: items.length - overspentCount,
+      overspentCount,
+    };
+  }, [data]);
 
-  if (isLoading || error || !data) {
+  if (isLoading || error || !data || !expenses) {
     return error ? <PageError message={error} onRetry={() => setReloadKey((value) => value + 1)} /> : <div className="h-64 rounded-xl bg-[#ECE8DC] animate-pulse" />;
   }
 
@@ -29,7 +47,7 @@ export const ArchiveAnalytics: React.FC = () => {
   const actualPath = data.weight.history.map((point, index) => `${index === 0 ? "M" : "L"} ${x(index)} ${y(point.weight)}`).join(" ");
   const forecastPoints = [data.weight.history.at(-1), ...data.weight.forecast].filter(Boolean);
   const forecastPath = forecastPoints.map((point, index) => `${index === 0 ? "M" : "L"} ${x(data.weight.history.length - 1 + index)} ${y(point!.weight)}`).join(" ");
-  const maxSpend = Math.max(data.expenses.weekly_limit, ...data.expenses.items.map((item) => item.total_cost), 1);
+  const maxSpend = Math.max(data.expenses.weekly_limit, ...expenses.items.map((item) => item.total_cost), 1);
 
   return (
     <div className="space-y-6">
@@ -56,9 +74,9 @@ export const ArchiveAnalytics: React.FC = () => {
         </Card>
 
         <Card className="p-6 space-y-4">
-          <div className="flex justify-between items-start"><div><span className="text-[10px] font-mono uppercase text-zinc-500 font-bold tracking-wider">Витрати на їжу по тижнях</span><div className="text-3xl font-mono font-black mt-1">{data.expenses.average_spend.toLocaleString("uk-UA")} ₴</div><span className="text-xs font-mono text-zinc-500">сер. чек / тижд</span></div><Badge variant="outline">Ліміт {data.expenses.weekly_limit.toLocaleString("uk-UA")} ₴</Badge></div>
-          <div className="mt-6 flex items-end justify-between h-32 px-2 border-b border-[#D8D2C2]">{data.expenses.items.map((item) => <div key={item.id} className="flex flex-col items-center gap-1.5 group relative"><span className="opacity-0 group-hover:opacity-100 absolute -top-6 text-[9px] font-mono bg-black text-white px-1.5 py-0.5 rounded">{item.total_cost} ₴</span><div style={{ height: `${(item.total_cost / maxSpend) * 110}px` }} className={`w-6 sm:w-8 rounded-t-md ${item.is_overspent ? "bg-[#FF5C00]" : "bg-[#DFDACB]"}`} /><span className="text-[10px] font-mono text-zinc-500 font-bold">{item.week_label}</span></div>)}</div>
-          <div className="pt-3 border-t border-[#D8D2C2] flex justify-between text-xs font-mono text-zinc-500"><span>В межах ліміту: {data.expenses.weeks_within_limit} з {data.expenses.total_weeks} тиж</span><span className="text-[#FF5C00] font-bold">{data.expenses.overspent_count} перевитрата</span></div>
+          <div className="flex justify-between items-start"><div><span className="text-[10px] font-mono uppercase text-zinc-500 font-bold tracking-wider">Витрати на їжу по тижнях</span><div className="text-3xl font-mono font-black mt-1">{expenses.averageSpend.toLocaleString("uk-UA")} ₴</div><span className="text-xs font-mono text-zinc-500">сер. чек / тижд</span></div><Badge variant="outline">Ліміт {data.expenses.weekly_limit.toLocaleString("uk-UA")} ₴</Badge></div>
+          <div className="mt-6 flex items-end justify-between h-32 px-2 border-b border-[#D8D2C2]">{expenses.items.map((item) => <div key={item.id} className="flex flex-col items-center gap-1.5 group relative"><span className="opacity-0 group-hover:opacity-100 absolute -top-6 text-[9px] font-mono bg-black text-white px-1.5 py-0.5 rounded">{item.total_cost} ₴</span><div style={{ height: `${(item.total_cost / maxSpend) * 110}px` }} className={`w-6 sm:w-8 rounded-t-md ${item.is_overspent ? "bg-[#FF5C00]" : "bg-[#DFDACB]"}`} /><span className="text-[10px] font-mono text-zinc-500 font-bold">{item.week_label}</span></div>)}</div>
+          <div className="pt-3 border-t border-[#D8D2C2] flex justify-between text-xs font-mono text-zinc-500"><span>В межах ліміту: {expenses.weeksWithinLimit} з {expenses.items.length} тиж</span><span className="text-[#FF5C00] font-bold">{expenses.overspentCount} перевитрата</span></div>
         </Card>
       </div>
     </div>
