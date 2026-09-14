@@ -114,7 +114,7 @@ export const WeekPlanPage: React.FC<Props> = ({ initialPlan }) => {
   // Плану ще немає (або він без днів) — показуємо порожній стан, а не демо-тиждень
   if (!plan || !activeDayData) {
     return (
-      <div className="max-w-6xl w-full mx-auto p-8">
+      <div className="max-w-6xl w-full mx-auto p-4 sm:p-8">
         {isRegenerating ? (
           <div className="flex justify-center py-8">
             <PlanGenerationLoader step={currentStep} />
@@ -161,7 +161,7 @@ export const WeekPlanPage: React.FC<Props> = ({ initialPlan }) => {
 
   if (isRegenerating) {
     return (
-      <div className="max-w-6xl w-full mx-auto p-8 flex justify-center">
+      <div className="max-w-6xl w-full mx-auto p-4 sm:p-8 flex justify-center">
         <PlanGenerationLoader
           step={currentStep}
           title="Агент оновлює план"
@@ -172,7 +172,7 @@ export const WeekPlanPage: React.FC<Props> = ({ initialPlan }) => {
   }
 
   return (
-    <div className="max-w-6xl w-full mx-auto p-8 space-y-6">
+    <div className="max-w-6xl w-full mx-auto p-4 sm:p-8 space-y-6">
       <WeeklyMacros
         macros={macros}
         days={days}

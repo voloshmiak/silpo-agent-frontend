@@ -74,7 +74,7 @@ export const ProfilePage: React.FC = () => {
 
   return (
     <div className="max-w-6xl w-full mx-auto p-8 space-y-6">
-        <div className="flex items-start justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
           <div>
             <h1 className="text-3xl font-black tracking-tight uppercase font-mono">
               Параметри та обмеження
